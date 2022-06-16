@@ -1,3 +1,8 @@
+#[derive(Debug)]
+struct ClassFile {
+    magic: u32
+}
+
 fn main() {
 
     let hello_world: Vec<u8> = vec![
@@ -55,8 +60,14 @@ fn main() {
         0x1c
     ];
     println!("The ByteCoder!");
+    let class_file = parse_class_file(hello_world);
+    println!("The class file {:?}", class_file);
+}
 
-    for b in hello_world {
+fn parse_class_file(bytecode: Vec<u8>) -> ClassFile {
+    for b in bytecode {
         print!("{:x} ", b);
     }
+    println!();
+    ClassFile { magic: 42 }
 }
