@@ -100,7 +100,28 @@ fn parse_cp_info_array(idx: usize, constant_pool_count: u16, bytecode: &Vec<u8>)
 }
 
 fn parse_cp_info(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
-    todo!()
+    let (idx, tag) = get_u1(idx, bytecode);
+    println!("tag {}", tag);
+    match tag {
+        7 => todo!(), // CONSTANT_Class
+        9 => todo!(), // CONSTANT_Fieldref
+        10 => todo!(), // CONSTANT_Methodref
+        11 => todo!(), // CONSTANT_InterfaceMethodref
+        8 => todo!(), // CONSTANT_String
+        3 => todo!(), // CONSTANT_Integer
+        4 => todo!(), // CONSTANT_Float
+        5 => todo!(), // CONSTANT_Long
+        6 => todo!(), // CONSTANT_Double
+        12 => todo!(), // CONSTANT_NameAndType
+        1 => todo!(), // CONSTANT_Utf8
+        15 => todo!(), // CONSTANT_MethodHandle
+        16 => todo!(), // CONSTANT_MethodType
+        17 => todo!(), // CONSTANT_Dynamic
+        18 => todo!(), // CONSTANT_InvokeDynamic
+        19 => todo!(), // CONSTANT_Module
+        20 => todo!(), // CONSTANT_Package
+        _ => todo!() // fail hard
+    }
 }
 
 fn get_u1(idx: usize, bytecode: &Vec<u8>) -> (usize, u8) {
