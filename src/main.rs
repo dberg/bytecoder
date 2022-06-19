@@ -1,6 +1,9 @@
 #[derive(Debug)]
 struct ClassFile {
-    magic: u32
+    magic: u32,
+    minor_version: u16,
+    major_version: u16,
+    constant_pool_count: u16,
 }
 
 fn main() {
@@ -60,14 +63,40 @@ fn main() {
         0x1c
     ];
     println!("The ByteCoder!");
-    let class_file = parse_class_file(hello_world);
-    println!("The class file {:?}", class_file);
+    let class_file = parse_class_file(&hello_world);
+    println!("The class file magic:{:x} minor:{:x} major:{} constant_pool_count:{}",
+        class_file.magic,
+        class_file.minor_version,
+        class_file.major_version,
+        class_file.constant_pool_count,
+    );
 }
 
-fn parse_class_file(bytecode: Vec<u8>) -> ClassFile {
-    for b in bytecode {
-        print!("{:x} ", b);
-    }
-    println!();
-    ClassFile { magic: 42 }
+fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
+    let idx: usize = 0;
+    let (idx, magic) = get_u4(idx, bytecode);
+    let (idx, minor_version) = get_u2(idx, bytecode);
+    let (idx, major_version) = get_u2(idx, bytecode);
+    let (idx, constant_pool_count) = get_u2(idx, bytecode);
+    ClassFile { magic, minor_version, major_version, constant_pool_count }
+}
+
+fn get_u1(idx: usize, bytecode: &Vec<u8>) -> u8 {
+    bytecode[idx]
+}
+
+fn get_u2(idx: usize, bytecode: &Vec<u8>) -> (usize, u16) {
+    let u0 = (bytecode[idx] as u16) << 8;
+    let u1 = bytecode[idx + 1] as u16;
+    let r: u16 = u0 | u1;
+    (idx + 2, r)
+}
+
+fn get_u4(idx: usize, bytecode: &Vec<u8>) -> (usize, u32) {
+    let u0 = (bytecode[idx] as u32) << 24;
+    let u1 = (bytecode[idx + 1] as u32) << 16;
+    let u2 = (bytecode[idx + 2] as u32) << 8;
+    let u3 = bytecode[idx + 3] as u32;
+    let r: u32 = u0 | u1 | u2 | u3;
+    (idx + 4, r)
 }
