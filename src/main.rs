@@ -4,6 +4,12 @@ struct ClassFile {
     minor_version: u16,
     major_version: u16,
     constant_pool_count: u16,
+    cp_info: Vec<CpInfo>,
+}
+
+#[derive(Debug)]
+struct CpInfo {
+    tag: u8,
 }
 
 fn main() {
@@ -78,11 +84,27 @@ fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
     let (idx, minor_version) = get_u2(idx, bytecode);
     let (idx, major_version) = get_u2(idx, bytecode);
     let (idx, constant_pool_count) = get_u2(idx, bytecode);
-    ClassFile { magic, minor_version, major_version, constant_pool_count }
+    let (idx, cp_info) = parse_cp_info_array(idx, constant_pool_count, bytecode);
+    ClassFile { magic, minor_version, major_version, constant_pool_count, cp_info }
 }
 
-fn get_u1(idx: usize, bytecode: &Vec<u8>) -> u8 {
-    bytecode[idx]
+fn parse_cp_info_array(idx: usize, constant_pool_count: u16, bytecode: &Vec<u8>) -> (usize, Vec<CpInfo>) {
+    let mut cp_infos: Vec<CpInfo> = Vec::new();
+    let mut idx = idx;
+    for _ in 0..constant_pool_count {
+        let (new_idx, cp_info) = parse_cp_info(idx, bytecode);
+        idx = new_idx;
+        cp_infos.push(cp_info);
+    }
+    (idx, cp_infos)
+}
+
+fn parse_cp_info(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
+    todo!()
+}
+
+fn get_u1(idx: usize, bytecode: &Vec<u8>) -> (usize, u8) {
+    (idx + 1, bytecode[idx])
 }
 
 fn get_u2(idx: usize, bytecode: &Vec<u8>) -> (usize, u16) {
