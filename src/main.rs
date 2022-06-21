@@ -10,10 +10,10 @@ struct ClassFile {
 #[derive(Debug)]
 enum CpInfo {
     ConstantClass { tag: u8, name_index: u16 },
-    // ConstantFieldref
+    ConstantFieldref { tag: u8, class_index: u16, name_and_type_index: u16 },
     ConstantMethodref { tag: u8, class_index: u16, name_and_type_index: u16 },
     // ConstantInterfaceMethodref
-    // ConstantString
+    ConstantString { tag: u8, string_index: u16 },
     // ConstantInteger
     // ConstantFloat
     // ConstantLong
@@ -92,8 +92,8 @@ fn main() {
         class_file.constant_pool_count,
     );
 
-    for item in class_file.cp_info {
-        println!("item:{:?}", item);
+    for (idx, item) in class_file.cp_info.iter().enumerate() {
+        println!("item[{}]:{:?}", idx, item);
     }
 }
 
@@ -109,8 +109,10 @@ fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
 
 fn parse_cp_info_array(idx: usize, constant_pool_count: u16, bytecode: &Vec<u8>) -> (usize, Vec<CpInfo>) {
     let mut cp_infos: Vec<CpInfo> = Vec::new();
+    let dummy = CpInfo::ConstantUtf8 { tag: 0, length: 0, bytes: vec![] };
+    cp_infos.push(dummy);
     let mut idx = idx;
-    for _ in 0..constant_pool_count {
+    for _ in 1..constant_pool_count {
         let (new_idx, cp_info) = parse_cp_info(idx, bytecode);
         idx = new_idx;
         cp_infos.push(cp_info);
@@ -121,11 +123,11 @@ fn parse_cp_info_array(idx: usize, constant_pool_count: u16, bytecode: &Vec<u8>)
 fn parse_cp_info(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
     let (idx, tag) = get_u1(idx, bytecode);
     match tag {
-        7 => parse_constant_class(idx, bytecode), // CONSTANT_Class
-        9 => todo!("CONSTANT_Fieldref"), // CONSTANT_Fieldref
+        7 => parse_constant_class(idx, bytecode),
+        9 => parse_constant_fieldref(idx, bytecode),
         10 => parse_constant_methodref(idx, bytecode),
         11 => todo!("CONSTANT_InterfaceMethodref"), // CONSTANT_InterfaceMethodref
-        8 => todo!("CONSTANT_String"), // CONSTANT_String
+        8 => parse_constant_string(idx, bytecode),
         3 => todo!("CONSTANT_Integer"), // CONSTANT_Integer
         4 => todo!("CONSTANT_Float"), // CONSTANT_Float
         5 => todo!("CONSTANT_Long"), // CONSTANT_Long
@@ -145,23 +147,33 @@ fn parse_cp_info(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
 /// 7 CONSTANT_Class
 fn parse_constant_class(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
     let (idx, name_index) = get_u2(idx, bytecode);
-    println!("CONSTANT_Class name_index:{}", name_index);
     (idx, CpInfo::ConstantClass { tag: 7, name_index })
+}
+
+/// 9 CONSTANT_Fieldref
+fn parse_constant_fieldref(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
+    let (idx, class_index) = get_u2(idx, bytecode);
+    let (idx, name_and_type_index) = get_u2(idx, bytecode);
+    (idx, CpInfo::ConstantFieldref { tag: 9, class_index, name_and_type_index })
 }
 
 /// 10 CONSTANT_Methodref
 fn parse_constant_methodref(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
     let (idx, class_index) = get_u2(idx, bytecode);
     let (idx, name_and_type_index) = get_u2(idx, bytecode);
-    println!("CONSTANT_Methodref class_index:{}, name_and_type_index:{}", class_index, name_and_type_index);
     (idx, CpInfo::ConstantMethodref { tag: 10, class_index, name_and_type_index })
+}
+
+/// 8 CONSTANT_String
+fn parse_constant_string(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
+    let (idx, string_index) = get_u2(idx, bytecode);
+    (idx, CpInfo::ConstantString { tag: 8, string_index })
 }
 
 /// 12 CONSTANT_NameAndType
 fn parse_constant_name_and_type(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
     let (idx, name_index) = get_u2(idx, bytecode);
     let (idx, descriptor_index) = get_u2(idx, bytecode);
-    println!("CONSTANT_NameAndType name_index:{}, descriptor_index:{}", name_index, descriptor_index);
     (idx, CpInfo::ConstantNameAndType { tag: 12, name_index, descriptor_index })
 }
 
@@ -171,10 +183,8 @@ fn parse_constant_utf8(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
     let len = length as usize;
     let mut bytes: Vec<u8> = Vec::with_capacity(len);
     for i in 0..len {
-        //println!("STRING({}) is {}", i + idx, bytecode[idx + i]);
         bytes.push(bytecode[idx + i])
     }
-    println!("CONSTANT_Utf8 length:{:?}, bytes:{:?}", length, bytes);
     (idx + len, CpInfo::ConstantUtf8 { tag: 1, length, bytes })
 }
 
