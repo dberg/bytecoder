@@ -9,7 +9,23 @@ struct ClassFile {
 
 #[derive(Debug)]
 enum CpInfo {
+    ConstantClass { tag: u8, name_index: u16 },
+    // ConstantFieldref
     ConstantMethodref { tag: u8, class_index: u16, name_and_type_index: u16 },
+    // ConstantInterfaceMethodref
+    // ConstantString
+    // ConstantInteger
+    // ConstantFloat
+    // ConstantLong
+    // ConstantDouble
+    ConstantNameAndType { tag: u8, name_index: u16, descriptor_index: u16 },
+    // ConstantUtf8
+    // ConstantMethodHandle
+    // ConstantMethodType
+    // ConstantDynamic
+    // ConstantInvokeDynamic
+    // ConstantModule
+    // ConstantPackage
 }
 
 fn main() {
@@ -105,16 +121,16 @@ fn parse_cp_info_array(idx: usize, constant_pool_count: u16, bytecode: &Vec<u8>)
 fn parse_cp_info(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
     let (idx, tag) = get_u1(idx, bytecode);
     match tag {
-        7 => todo!(), // CONSTANT_Class
-        9 => todo!(), // CONSTANT_Fieldref
+        7 => parse_constant_class(idx, bytecode), // CONSTANT_Class
+        9 => todo!("CONSTANT_Fieldref"), // CONSTANT_Fieldref
         10 => parse_constant_methodref(idx, bytecode),
-        11 => todo!(), // CONSTANT_InterfaceMethodref
-        8 => todo!(), // CONSTANT_String
-        3 => todo!(), // CONSTANT_Integer
-        4 => todo!(), // CONSTANT_Float
-        5 => todo!(), // CONSTANT_Long
+        11 => todo!("CONSTANT_InterfaceMethodref"), // CONSTANT_InterfaceMethodref
+        8 => todo!("CONSTANT_String"), // CONSTANT_String
+        3 => todo!("CONSTANT_Integer"), // CONSTANT_Integer
+        4 => todo!("CONSTANT_Float"), // CONSTANT_Float
+        5 => todo!("CONSTANT_Long"), // CONSTANT_Long
         6 => todo!(), // CONSTANT_Double
-        12 => todo!(), // CONSTANT_NameAndType
+        12 => parse_constant_name_and_type(idx, bytecode),
         1 => todo!(), // CONSTANT_Utf8
         15 => todo!(), // CONSTANT_MethodHandle
         16 => todo!(), // CONSTANT_MethodType
@@ -126,12 +142,26 @@ fn parse_cp_info(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
     }
 }
 
+/// 7 CONSTANT_Class
+fn parse_constant_class(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
+    let (idx, name_index) = get_u2(idx, bytecode);
+    println!("CONSTANT_Class name_index:{}", name_index);
+    (idx, CpInfo::ConstantClass { tag: 7, name_index })
+}
+
 /// 10 CONSTANT_Methodref
 fn parse_constant_methodref(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
     let (idx, class_index) = get_u2(idx, bytecode);
     let (idx, name_and_type_index) = get_u2(idx, bytecode);
     println!("CONSTANT_Methodref class_index:{}, name_and_type_index:{}", class_index, name_and_type_index);
     (idx, CpInfo::ConstantMethodref { tag: 10, class_index, name_and_type_index })
+}
+
+/// 12 CONSTANT_NameAndType
+fn parse_constant_name_and_type(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
+    let (idx, name_index) = get_u2(idx, bytecode);
+    let (idx, descriptor_index) = get_u2(idx, bytecode);
+    (idx, CpInfo::ConstantNameAndType { tag: 12, name_index, descriptor_index })
 }
 
 fn get_u1(idx: usize, bytecode: &Vec<u8>) -> (usize, u8) {
