@@ -8,8 +8,8 @@ struct ClassFile {
 }
 
 #[derive(Debug)]
-struct CpInfo {
-    tag: u8,
+enum CpInfo {
+    ConstantMethodref { tag: u8, class_index: u16, name_and_type_index: u16 },
 }
 
 fn main() {
@@ -68,7 +68,6 @@ fn main() {
         0x01, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x02, 0x00,
         0x1c
     ];
-    println!("The ByteCoder!");
     let class_file = parse_class_file(&hello_world);
     println!("The class file magic:{:x} minor:{:x} major:{} constant_pool_count:{}",
         class_file.magic,
@@ -76,6 +75,10 @@ fn main() {
         class_file.major_version,
         class_file.constant_pool_count,
     );
+
+    for item in class_file.cp_info {
+        println!("item:{:?}", item);
+    }
 }
 
 fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
@@ -101,11 +104,10 @@ fn parse_cp_info_array(idx: usize, constant_pool_count: u16, bytecode: &Vec<u8>)
 
 fn parse_cp_info(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
     let (idx, tag) = get_u1(idx, bytecode);
-    println!("tag {}", tag);
     match tag {
         7 => todo!(), // CONSTANT_Class
         9 => todo!(), // CONSTANT_Fieldref
-        10 => todo!(), // CONSTANT_Methodref
+        10 => parse_constant_methodref(idx, bytecode),
         11 => todo!(), // CONSTANT_InterfaceMethodref
         8 => todo!(), // CONSTANT_String
         3 => todo!(), // CONSTANT_Integer
@@ -122,6 +124,14 @@ fn parse_cp_info(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
         20 => todo!(), // CONSTANT_Package
         _ => todo!() // fail hard
     }
+}
+
+/// 10 CONSTANT_Methodref
+fn parse_constant_methodref(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
+    let (idx, class_index) = get_u2(idx, bytecode);
+    let (idx, name_and_type_index) = get_u2(idx, bytecode);
+    println!("CONSTANT_Methodref class_index:{}, name_and_type_index:{}", class_index, name_and_type_index);
+    (idx, CpInfo::ConstantMethodref { tag: 10, class_index, name_and_type_index })
 }
 
 fn get_u1(idx: usize, bytecode: &Vec<u8>) -> (usize, u8) {
