@@ -5,6 +5,13 @@ struct ClassFile {
     major_version: u16,
     constant_pool_count: u16,
     cp_info: Vec<CpInfo>,
+    access_flags: u16,
+    this_class: u16,
+    super_class: u16,
+    interfaces_count: u16,
+    interfaces: Vec<u16>,
+    fields_count: u16,
+    fields: Vec<FieldInfo>,
 }
 
 #[derive(Debug)]
@@ -28,7 +35,57 @@ enum CpInfo {
     // ConstantPackage
 }
 
+#[derive(Debug)]
+struct FieldInfo {
+    access_flags: u16,
+    name_index: u16,
+    descriptor_index: u16,
+    attributes_count: u16,
+    attributes: Vec<AttributeInfo>
+}
+
+#[derive(Debug)]
+enum AttributeInfo {
+    ConstantValue { attribute_name_index: u16, attribute_length: u32, constantvalue_index: u16 },
+    // TODO:
+    Code {},
+    StackMapTable {},
+    Exceptions {},
+    InnerClasses {},
+    EnclosingMethod {},
+    Synthetic {},
+    Signature {},
+    SourceFile {},
+    SourceDebugExtension {},
+    LineNumberTable {},
+    LocalVariableTable {},
+    LocalVariableTypeTable {},
+    Deprecated {},
+    RuntimeVisibleAnnotations {},
+    RuntimeInvisibleAnnotations {},
+    RuntimeVisibleParameterAnnotations {},
+    RuntimeInvisibleParameterAnnotations {},
+    RuntimeVisibleTypeAnnotations {},
+    RuntimeInvisibleTypeAnnotations {},
+    AnnotationDefault {},
+    BootstrapMethods {},
+    MethodParameters {},
+    Module {},
+    ModulePackages {},
+    ModuleMainClass {},
+    NestHost {},
+    NestMembers {},
+    Record {},
+    PermittedSubclasses {},
+}
+
 fn main() {
+
+    // public class A {
+    //     public static void main(String[] args) {
+    //         System.out.println("Hello, world.");
+    //     }
+    // }
 
     let hello_world: Vec<u8> = vec![
         0xca, 0xfe, 0xba, 0xbe, 0x00, 0x00, 0x00, 0x3e,
@@ -95,6 +152,15 @@ fn main() {
     for (idx, item) in class_file.cp_info.iter().enumerate() {
         println!("item[{}]:{:?}", idx, item);
     }
+
+    println!("access_flags:{:x} this_class:{} super_class:{} interfaces_count:{} interfaces:{:?} fields_count:{}",
+        class_file.access_flags,
+        class_file.this_class,
+        class_file.super_class,
+        class_file.interfaces_count,
+        class_file.interfaces,
+        class_file.fields_count,
+    );
 }
 
 fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
@@ -104,7 +170,28 @@ fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
     let (idx, major_version) = get_u2(idx, bytecode);
     let (idx, constant_pool_count) = get_u2(idx, bytecode);
     let (idx, cp_info) = parse_cp_info_array(idx, constant_pool_count, bytecode);
-    ClassFile { magic, minor_version, major_version, constant_pool_count, cp_info }
+    let (idx, access_flags) = get_u2(idx, bytecode);
+    let (idx, this_class) = get_u2(idx, bytecode);
+    let (idx, super_class) = get_u2(idx, bytecode);
+    let (idx, interfaces_count) = get_u2(idx, bytecode);
+    let (idx, interfaces) = parse_interfaces(idx, interfaces_count, bytecode);
+    let (idx, fields_count) = get_u2(idx, bytecode);
+    let (idx, fields) = parse_fields(idx, fields_count, &cp_info, bytecode);
+
+    ClassFile {
+        magic,
+        minor_version,
+        major_version,
+        constant_pool_count,
+        cp_info,
+        access_flags,
+        this_class,
+        super_class,
+        interfaces_count,
+        interfaces,
+        fields_count,
+        fields
+    }
 }
 
 fn parse_cp_info_array(idx: usize, constant_pool_count: u16, bytecode: &Vec<u8>) -> (usize, Vec<CpInfo>) {
@@ -186,6 +273,22 @@ fn parse_constant_utf8(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
         bytes.push(bytecode[idx + i])
     }
     (idx + len, CpInfo::ConstantUtf8 { tag: 1, length, bytes })
+}
+
+fn parse_interfaces(idx: usize, interfaces_count: u16, bytecode: &Vec<u8>) -> (usize, Vec<u16>) {
+    let c = interfaces_count as usize;
+    let mut v: Vec<u16> = Vec::with_capacity(c);
+    let mut idx = idx;
+    for _ in 0..c {
+        let (idx_new, interface) = get_u2(idx, bytecode);
+        idx = idx_new;
+        v.push(interface);
+    }
+    (idx, v)
+}
+
+fn parse_fields(idx: usize, fields_count: u16, cp_info: &Vec<CpInfo>, bytecode: &Vec<u8>) -> (usize, Vec<FieldInfo>) {
+    todo!()
 }
 
 fn get_u1(idx: usize, bytecode: &Vec<u8>) -> (usize, u8) {
