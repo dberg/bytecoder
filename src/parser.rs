@@ -126,7 +126,8 @@ fn parse_interfaces(idx: usize, interfaces_count: u16, bytecode: &Vec<u8>) -> (u
 }
 
 fn parse_fields(idx: usize, fields_count: u16, cp_info: &Vec<CpInfo>, bytecode: &Vec<u8>) -> (usize, Vec<FieldInfo>) {
-    todo!()
+    // TODO:
+    (idx, Vec::new())
 }
 
 fn get_u1(idx: usize, bytecode: &Vec<u8>) -> (usize, u8) {
