@@ -26,7 +26,7 @@ enum CpInfo {
     // ConstantLong
     // ConstantDouble
     ConstantNameAndType { tag: u8, name_index: u16, descriptor_index: u16 },
-    ConstantUtf8 { tag: u8, length: u16, bytes: Vec<u8> },
+    ConstantUtf8 { tag: u8, length: u16, bytes: Vec<u8>, bytes_str: String },
     // ConstantMethodHandle
     // ConstantMethodType
     // ConstantDynamic
@@ -196,7 +196,7 @@ fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
 
 fn parse_cp_info_array(idx: usize, constant_pool_count: u16, bytecode: &Vec<u8>) -> (usize, Vec<CpInfo>) {
     let mut cp_infos: Vec<CpInfo> = Vec::new();
-    let dummy = CpInfo::ConstantUtf8 { tag: 0, length: 0, bytes: vec![] };
+    let dummy = CpInfo::ConstantUtf8 { tag: 0, length: 0, bytes: vec![], bytes_str: String::from("Dummy Value") };
     cp_infos.push(dummy);
     let mut idx = idx;
     for _ in 1..constant_pool_count {
@@ -272,7 +272,8 @@ fn parse_constant_utf8(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
     for i in 0..len {
         bytes.push(bytecode[idx + i])
     }
-    (idx + len, CpInfo::ConstantUtf8 { tag: 1, length, bytes })
+    let bytes_str: String = String::from_utf8(bytes.clone()).expect("Invalid UTF-8");
+    (idx + len, CpInfo::ConstantUtf8 { tag: 1, length, bytes, bytes_str })
 }
 
 fn parse_interfaces(idx: usize, interfaces_count: u16, bytecode: &Vec<u8>) -> (usize, Vec<u16>) {
