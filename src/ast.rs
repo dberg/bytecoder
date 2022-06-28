@@ -12,6 +12,7 @@ pub struct ClassFile {
     pub interfaces: Vec<u16>,
     pub fields_count: u16,
     pub fields: Vec<FieldInfo>,
+    pub methods_count: u16,
 }
 
 #[derive(Debug)]

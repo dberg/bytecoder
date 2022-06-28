@@ -13,7 +13,8 @@ pub fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
     let (idx, interfaces_count) = get_u2(idx, bytecode);
     let (idx, interfaces) = parse_interfaces(idx, interfaces_count, bytecode);
     let (idx, fields_count) = get_u2(idx, bytecode);
-    let (idx, fields) = parse_fields(idx, fields_count, &cp_info, bytecode);
+    let (idx, fields) = parse_fields(idx, fields_count, bytecode);
+    let (idx, methods_count) = get_u2(idx, bytecode);
 
     ClassFile {
         magic,
@@ -27,7 +28,8 @@ pub fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
         interfaces_count,
         interfaces,
         fields_count,
-        fields
+        fields,
+        methods_count,
     }
 }
 
@@ -125,9 +127,19 @@ fn parse_interfaces(idx: usize, interfaces_count: u16, bytecode: &Vec<u8>) -> (u
     (idx, v)
 }
 
-fn parse_fields(idx: usize, fields_count: u16, cp_info: &Vec<CpInfo>, bytecode: &Vec<u8>) -> (usize, Vec<FieldInfo>) {
-    // TODO:
-    (idx, Vec::new())
+fn parse_fields(idx: usize, fields_count: u16, bytecode: &Vec<u8>) -> (usize, Vec<FieldInfo>) {
+    let len = fields_count as usize;
+    let mut idx = idx;
+    let mut fields: Vec<FieldInfo> = Vec::with_capacity(len);
+    for _ in 0..len {
+        let (idx, field_info) = parse_field_info(idx, bytecode);
+        fields.push(field_info);
+    }
+    (idx, fields)
+}
+
+fn parse_field_info(idx: usize, bytecode: &Vec<u8>) -> (usize, FieldInfo) {
+    todo!()
 }
 
 fn get_u1(idx: usize, bytecode: &Vec<u8>) -> (usize, u8) {
