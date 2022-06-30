@@ -13,6 +13,7 @@ pub struct ClassFile {
     pub fields_count: u16,
     pub fields: Vec<FieldInfo>,
     pub methods_count: u16,
+    pub methods: Vec<MethodInfo>,
 }
 
 #[derive(Debug)]
@@ -38,6 +39,15 @@ pub enum CpInfo {
 
 #[derive(Debug)]
 pub struct FieldInfo {
+    pub access_flags: u16,
+    pub name_index: u16,
+    pub descriptor_index: u16,
+    pub attributes_count: u16,
+    pub attributes: Vec<AttributeInfo>
+}
+
+#[derive(Debug)]
+pub struct MethodInfo {
     pub access_flags: u16,
     pub name_index: u16,
     pub descriptor_index: u16,

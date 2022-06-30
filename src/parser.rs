@@ -1,4 +1,4 @@
-use crate::ast::{ClassFile, CpInfo, FieldInfo};
+use crate::ast::{AttributeInfo, ClassFile, CpInfo, FieldInfo, MethodInfo};
 
 pub fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
     let idx: usize = 0;
@@ -15,6 +15,7 @@ pub fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
     let (idx, fields_count) = get_u2(idx, bytecode);
     let (idx, fields) = parse_fields(idx, fields_count, bytecode);
     let (idx, methods_count) = get_u2(idx, bytecode);
+    let (idx, methods) = parse_methods(idx, methods_count, bytecode);
 
     ClassFile {
         magic,
@@ -30,6 +31,7 @@ pub fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
         fields_count,
         fields,
         methods_count,
+        methods,
     }
 }
 
@@ -116,23 +118,24 @@ fn parse_constant_utf8(idx: usize, bytecode: &Vec<u8>) -> (usize, CpInfo) {
 }
 
 fn parse_interfaces(idx: usize, interfaces_count: u16, bytecode: &Vec<u8>) -> (usize, Vec<u16>) {
-    let c = interfaces_count as usize;
-    let mut v: Vec<u16> = Vec::with_capacity(c);
+    let count = interfaces_count as usize;
+    let mut v: Vec<u16> = Vec::with_capacity(count);
     let mut idx = idx;
-    for _ in 0..c {
-        let (idx_new, interface) = get_u2(idx, bytecode);
-        idx = idx_new;
+    for _ in 0..count {
+        let (i, interface) = get_u2(idx, bytecode);
+        idx = i;
         v.push(interface);
     }
     (idx, v)
 }
 
 fn parse_fields(idx: usize, fields_count: u16, bytecode: &Vec<u8>) -> (usize, Vec<FieldInfo>) {
-    let len = fields_count as usize;
+    let count = fields_count as usize;
     let mut idx = idx;
-    let mut fields: Vec<FieldInfo> = Vec::with_capacity(len);
-    for _ in 0..len {
-        let (idx, field_info) = parse_field_info(idx, bytecode);
+    let mut fields: Vec<FieldInfo> = Vec::with_capacity(count);
+    for _ in 0..count {
+        let (i, field_info) = parse_field_info(idx, bytecode);
+        idx = i;
         fields.push(field_info);
     }
     (idx, fields)
@@ -140,6 +143,46 @@ fn parse_fields(idx: usize, fields_count: u16, bytecode: &Vec<u8>) -> (usize, Ve
 
 fn parse_field_info(idx: usize, bytecode: &Vec<u8>) -> (usize, FieldInfo) {
     todo!()
+}
+
+fn parse_methods(idx: usize, methods_count: u16, bytecode: &Vec<u8>) -> (usize, Vec<MethodInfo>) {
+    let mut idx = idx;
+    let count = methods_count as usize;
+    let mut attributes: Vec<MethodInfo> = Vec::with_capacity(count);
+    for _ in 0..count {
+        let (i, method_info) = parse_method_info(idx, &bytecode);
+        idx = i;
+        attributes.push(method_info);
+    }
+    (idx, attributes)
+}
+
+fn parse_method_info(idx: usize, bytecode: &Vec<u8>) -> (usize, MethodInfo) {
+    let (idx, access_flags) = get_u2(idx, bytecode);
+    let (idx, name_index) = get_u2(idx, bytecode);
+    let (idx, descriptor_index) = get_u2(idx, bytecode);
+    let (idx, attributes_count) = get_u2(idx, bytecode);
+    let (idx, attributes) = parse_attributes(idx, attributes_count, bytecode);
+    let method_info = MethodInfo { access_flags, name_index, descriptor_index, attributes_count, attributes };
+    (idx, method_info)
+}
+
+fn parse_attributes(idx: usize, attributes_count: u16, bytecode: &Vec<u8>) -> (usize, Vec<AttributeInfo>) {
+    let mut idx = idx;
+    let count = attributes_count as usize;
+    let mut attributes: Vec<AttributeInfo> = Vec::with_capacity(count);
+    for _ in 0..count {
+        let (i, attribute_info) = parse_attribute_info(idx, bytecode);
+        idx = i;
+        attributes.push(attribute_info);
+    }
+    (idx, attributes)
+}
+
+fn parse_attribute_info(idx: usize, bytecode: &Vec<u8>) -> (usize, AttributeInfo) {
+    let (idx, attribute_name_index) = get_u2(idx, bytecode);
+    let (idx, attribute_length) = get_u4(idx, bytecode);
+    todo!("We need to lookup the constant pool to decide which AttributeInfo to parse")
 }
 
 fn get_u1(idx: usize, bytecode: &Vec<u8>) -> (usize, u8) {
