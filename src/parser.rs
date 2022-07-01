@@ -1,4 +1,4 @@
-use crate::ast::{AttributeInfo, ClassFile, CpInfo, FieldInfo, MethodInfo};
+use crate::ast::{AttributeInfo, ClassFile, CpInfo, ExceptionTable, FieldInfo, MethodInfo};
 
 pub fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
     let idx: usize = 0;
@@ -188,7 +188,7 @@ fn parse_attribute_info(idx: usize, cp_info: &Vec<CpInfo>, bytecode: &Vec<u8>) -
         match bytes_str.as_str() {
             "AnnotationDefault" => todo!(),
             "BootstrapMethods" => todo!(),
-            "Code" => parse_attribute_info_code(idx, attribute_name_index, attribute_length, bytecode),
+            "Code" => parse_attribute_info_code(idx, attribute_name_index, attribute_length, cp_info, bytecode),
             "ConstantValue" => todo!(),
             "Deprecated" => todo!(),
             "EnclosingMethod" => todo!(),
@@ -224,7 +224,41 @@ fn parse_attribute_info(idx: usize, cp_info: &Vec<CpInfo>, bytecode: &Vec<u8>) -
     (idx, attribute_info)
 }
 
-fn parse_attribute_info_code(idx: usize, attribute_name_index: u16, attribute_length: u32, bytecode: &Vec<u8>) -> (usize, AttributeInfo) {
+fn parse_attribute_info_code(idx: usize, attribute_name_index: u16, attribute_length: u32, cp_info: &Vec<CpInfo>, bytecode: &Vec<u8>) -> (usize, AttributeInfo) {
+    let (idx, max_stack) = get_u2(idx, bytecode);
+    let (idx, max_locals) = get_u2(idx, bytecode);
+    let (idx, code_length) = get_u4(idx, bytecode);
+    let mut code: Vec<u8> = Vec::with_capacity(code_length as usize);
+    for i in 0..(code_length as usize) {
+        let (_, byte) = get_u1(idx + i, bytecode);
+        code.push(byte);
+    }
+    let idx = idx + code_length as usize;
+    let (idx, exception_table_length) = get_u2(idx, bytecode);
+    let mut exceptions: Vec<ExceptionTable> = Vec::with_capacity(exception_table_length as usize);
+    for i in 0..(exception_table_length as usize) {
+        let (_, exception_table) = parse_exception_table(idx + i, bytecode);
+        exceptions.push(exception_table);
+    }
+    let idx = idx + exception_table_length as usize;
+    let (idx, attributes_count) = get_u2(idx, bytecode);
+    let (idx, attributes) = parse_attributes(idx, attributes_count, cp_info, bytecode);
+    let attribute_info_code = AttributeInfo::Code {
+        attribute_name_index,
+        attribute_length,
+        max_stack,
+        max_locals,
+        code_length,
+        code,
+        exception_table_length,
+        exception_table: exceptions,
+        attributes_count,
+        attributes
+    };
+    (idx, attribute_info_code)
+}
+
+fn parse_exception_table(idx: usize, bytecode: &Vec<u8>) -> (usize, ExceptionTable) {
     todo!()
 }
 

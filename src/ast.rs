@@ -58,8 +58,8 @@ pub struct MethodInfo {
 #[derive(Debug)]
 pub enum AttributeInfo {
     ConstantValue { attribute_name_index: u16, attribute_length: u32, constantvalue_index: u16 },
+    Code { attribute_name_index: u16, attribute_length: u32, max_stack: u16, max_locals: u16, code_length: u32, code: Vec<u8>, exception_table_length: u16, exception_table: Vec<ExceptionTable>, attributes_count: u16, attributes: Vec<AttributeInfo> },
     // TODO:
-    Code {},
     StackMapTable {},
     Exceptions {},
     InnerClasses {},
@@ -88,4 +88,12 @@ pub enum AttributeInfo {
     NestMembers {},
     Record {},
     PermittedSubclasses {},
+}
+
+#[derive(Debug)]
+pub struct ExceptionTable {
+    start_pc: u16,
+    end_pc: u16,
+    handler_pc: u16,
+    catch_type: u16
 }
