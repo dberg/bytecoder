@@ -15,7 +15,7 @@ pub fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
     let (idx, fields_count) = get_u2(idx, bytecode);
     let (idx, fields) = parse_fields(idx, fields_count, bytecode);
     let (idx, methods_count) = get_u2(idx, bytecode);
-    let (idx, methods) = parse_methods(idx, methods_count, bytecode);
+    let (idx, methods) = parse_methods(idx, methods_count, &cp_info,bytecode);
 
     ClassFile {
         magic,
@@ -145,44 +145,87 @@ fn parse_field_info(idx: usize, bytecode: &Vec<u8>) -> (usize, FieldInfo) {
     todo!()
 }
 
-fn parse_methods(idx: usize, methods_count: u16, bytecode: &Vec<u8>) -> (usize, Vec<MethodInfo>) {
+fn parse_methods(idx: usize, methods_count: u16, cp_info: &Vec<CpInfo>, bytecode: &Vec<u8>) -> (usize, Vec<MethodInfo>) {
     let mut idx = idx;
     let count = methods_count as usize;
     let mut attributes: Vec<MethodInfo> = Vec::with_capacity(count);
     for _ in 0..count {
-        let (i, method_info) = parse_method_info(idx, &bytecode);
+        let (i, method_info) = parse_method_info(idx, cp_info, &bytecode);
         idx = i;
         attributes.push(method_info);
     }
     (idx, attributes)
 }
 
-fn parse_method_info(idx: usize, bytecode: &Vec<u8>) -> (usize, MethodInfo) {
+fn parse_method_info(idx: usize, cp_info: &Vec<CpInfo>, bytecode: &Vec<u8>) -> (usize, MethodInfo) {
     let (idx, access_flags) = get_u2(idx, bytecode);
     let (idx, name_index) = get_u2(idx, bytecode);
     let (idx, descriptor_index) = get_u2(idx, bytecode);
     let (idx, attributes_count) = get_u2(idx, bytecode);
-    let (idx, attributes) = parse_attributes(idx, attributes_count, bytecode);
+    let (idx, attributes) = parse_attributes(idx, attributes_count, cp_info, bytecode);
     let method_info = MethodInfo { access_flags, name_index, descriptor_index, attributes_count, attributes };
     (idx, method_info)
 }
 
-fn parse_attributes(idx: usize, attributes_count: u16, bytecode: &Vec<u8>) -> (usize, Vec<AttributeInfo>) {
+fn parse_attributes(idx: usize, attributes_count: u16, cp_info: &Vec<CpInfo>, bytecode: &Vec<u8>) -> (usize, Vec<AttributeInfo>) {
     let mut idx = idx;
     let count = attributes_count as usize;
     let mut attributes: Vec<AttributeInfo> = Vec::with_capacity(count);
     for _ in 0..count {
-        let (i, attribute_info) = parse_attribute_info(idx, bytecode);
+        let (i, attribute_info) = parse_attribute_info(idx, cp_info, bytecode);
         idx = i;
         attributes.push(attribute_info);
     }
     (idx, attributes)
 }
 
-fn parse_attribute_info(idx: usize, bytecode: &Vec<u8>) -> (usize, AttributeInfo) {
+fn parse_attribute_info(idx: usize, cp_info: &Vec<CpInfo>, bytecode: &Vec<u8>) -> (usize, AttributeInfo) {
     let (idx, attribute_name_index) = get_u2(idx, bytecode);
     let (idx, attribute_length) = get_u4(idx, bytecode);
-    todo!("We need to lookup the constant pool to decide which AttributeInfo to parse")
+    let cp_info_idx = attribute_name_index as usize;
+    let cp_item = cp_info.get(cp_info_idx).expect("Failed to retrieve constant_pool item");
+    let (idx, attribute_info): (usize, AttributeInfo) = if let CpInfo::ConstantUtf8 { tag: _tag, length: _length, bytes: _bytes, bytes_str } = cp_item {
+        match bytes_str.as_str() {
+            "AnnotationDefault" => todo!(),
+            "BootstrapMethods" => todo!(),
+            "Code" => parse_attribute_info_code(idx, attribute_name_index, attribute_length, bytecode),
+            "ConstantValue" => todo!(),
+            "Deprecated" => todo!(),
+            "EnclosingMethod" => todo!(),
+            "Exceptions" => todo!(),
+            "InnerClasses" => todo!(),
+            "LineNumberTable" => todo!(),
+            "LocalVariableTable" => todo!(),
+            "LocalVariableTypeTable" => todo!(),
+            "MethodParameters" => todo!(),
+            "Module" => todo!(),
+            "ModuleMainClass" => todo!(),
+            "ModulePackages" => todo!(),
+            "NestHost" => todo!(),
+            "NestMembers" => todo!(),
+            "PermittedSubclasses" => todo!(),
+            "Record" => todo!(),
+            "RuntimeInvisibleAnnotations" => todo!(),
+            "RuntimeInvisibleParameterAnnotations" => todo!(),
+            "RuntimeInvisibleTypeAnnotations" => todo!(),
+            "RuntimeVisibleAnnotations" => todo!(),
+            "RuntimeVisibleParameterAnnotations" => todo!(),
+            "RuntimeVisibleTypeAnnotations" => todo!(),
+            "Signature" => todo!(),
+            "SourceDebugExtension" => todo!(),
+            "SourceFile" => todo!(),
+            "StackMapTable" => todo!(),
+            "Synthetic" => todo!(),
+            _ => todo!()
+        }
+    } else {
+        todo!()
+    };
+    (idx, attribute_info)
+}
+
+fn parse_attribute_info_code(idx: usize, attribute_name_index: u16, attribute_length: u32, bytecode: &Vec<u8>) -> (usize, AttributeInfo) {
+    todo!()
 }
 
 fn get_u1(idx: usize, bytecode: &Vec<u8>) -> (usize, u8) {
