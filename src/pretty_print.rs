@@ -1,4 +1,4 @@
-use crate::ast::ClassFile;
+use crate::ast::{ClassFile, CpInfo};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     println!("TODO: public class A");
@@ -14,12 +14,41 @@ pub fn pretty_print_text(class_file: &ClassFile) {
         class_file.attributes_count,
     );
 
-    println!("Constant pool({}):", class_file.constant_pool_count);
+    println!("Constant pool({}):", class_file.constant_pool_count - 1);
 
-    println!("TODO:");
     for (idx, item) in class_file.cp_info.iter().enumerate() {
         if idx != 0 {
-            println!("item[{}]:{:?}", idx, item);
+            println!("  #{}:{:?}", idx, item);
         }
+    }
+}
+
+fn cp_info_to_string(idx: usize, cp_info: &Vec<CpInfo>) -> String {
+    match cp_info[idx] {
+        CpInfo::ConstantClass { .. } => todo!(),
+        CpInfo::ConstantFieldref { .. } => todo!(),
+        CpInfo::ConstantMethodref { tag: _tag, class_index, name_and_type_index } =>
+            format!("Methodref\t#{}.#{}\t// {}.{}", class_index, name_and_type_index, get_constant_class_name(class_index, cp_info), "TODO_METHOD_NAME"),
+        CpInfo::ConstantString { .. } => todo!(),
+        CpInfo::ConstantNameAndType { .. } => todo!(),
+        CpInfo::ConstantUtf8 { .. } => todo!(),
+    }
+}
+
+fn get_constant_class_name(class_index: u16, cp_info: &Vec<CpInfo>) -> String {
+    let constant_class = &cp_info[class_index as usize];
+    if let CpInfo::ConstantClass { tag, name_index } = constant_class {
+        get_constant_utf8(name_index.clone(), cp_info)
+    } else {
+        panic!("Expected ConstantClass for idx {}", class_index)
+    }
+}
+
+fn get_constant_utf8(name_index: u16, cp_info: &Vec<CpInfo>) -> String {
+    let constant_utf8 = &cp_info[name_index as usize];
+    if let CpInfo::ConstantUtf8 { tag, length, bytes, bytes_str } = constant_utf8 {
+        bytes_str.clone()
+    } else {
+        panic!("Expected ConstantUtf8 for idx {}", name_index)
     }
 }
