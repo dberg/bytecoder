@@ -14,6 +14,8 @@ pub struct ClassFile {
     pub fields: Vec<FieldInfo>,
     pub methods_count: u16,
     pub methods: Vec<MethodInfo>,
+    pub attributes_count: u16,
+    pub attributes: Vec<AttributeInfo>
 }
 
 #[derive(Debug)]
@@ -65,7 +67,7 @@ pub enum AttributeInfo {
     EnclosingMethod {},
     Synthetic {},
     Signature {},
-    SourceFile {},
+    SourceFile { attribute_name_index: u16, attribute_length: u32, sourcefile_index: u16 },
     SourceDebugExtension {},
     LineNumberTable { attribute_name_index: u16, attribute_length: u32, line_number_table_length: u16, line_number_tables: Vec<LineNumberTableItem> },
     LocalVariableTable {},

@@ -1,5 +1,5 @@
 use crate::ast::{AttributeInfo, ClassFile, CpInfo, ExceptionTable, FieldInfo, LineNumberTableItem, MethodInfo};
-use crate::ast::AttributeInfo::LineNumberTable;
+use crate::ast::AttributeInfo::{LineNumberTable, SourceFile};
 
 pub fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
     let idx: usize = 0;
@@ -17,6 +17,8 @@ pub fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
     let (idx, fields) = parse_fields(idx, fields_count, bytecode);
     let (idx, methods_count) = get_u2(idx, bytecode);
     let (idx, methods) = parse_methods(idx, methods_count, &cp_info,bytecode);
+    let (idx, attributes_count) = get_u2(idx, bytecode);
+    let (_, attributes) = parse_attributes(idx, attributes_count, &cp_info, bytecode);
 
     ClassFile {
         magic,
@@ -33,6 +35,8 @@ pub fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
         fields,
         methods_count,
         methods,
+        attributes_count,
+        attributes
     }
 }
 
@@ -214,7 +218,7 @@ fn parse_attribute_info(idx: usize, cp_info: &Vec<CpInfo>, bytecode: &Vec<u8>) -
             "RuntimeVisibleTypeAnnotations" => todo!(),
             "Signature" => todo!(),
             "SourceDebugExtension" => todo!(),
-            "SourceFile" => todo!(),
+            "SourceFile" => parse_attribute_info_source_file(idx, attribute_name_index, attribute_length, bytecode),
             "StackMapTable" => todo!(),
             "Synthetic" => todo!(),
             _ => todo!()
@@ -289,6 +293,12 @@ fn parse_attribute_info_line_number_table_item(idx: usize, bytecode: &Vec<u8>) -
         line_number
     };
     (idx, line_number_table_item)
+}
+
+fn parse_attribute_info_source_file(idx: usize, attribute_name_index: u16, attribute_length: u32, bytecode: &Vec<u8>) -> (usize, AttributeInfo) {
+    let (idx, sourcefile_index) = get_u2(idx, bytecode);
+    let source_file = SourceFile { attribute_name_index, attribute_length, sourcefile_index };
+    (idx, source_file)
 }
 
 fn get_u1(idx: usize, bytecode: &Vec<u8>) -> (usize, u8) {

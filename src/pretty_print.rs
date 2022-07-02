@@ -2,7 +2,7 @@ use crate::ast::ClassFile;
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     println!("TODO: public class A");
-    println!("  minor:{:x}\n  major:{}\n  flags:{:x}\n  this_class: #{}\n  super_class: #{}\n  interfaces: {}, fields: {}, methods: {}, attributes: TODO",
+    println!("  minor version:{:x}\n  major version:{}\n  flags: {:x}\n  this_class: #{}\n  super_class: #{}\n  interfaces: {}, fields: {}, methods: {}, attributes: {}",
         class_file.minor_version,
         class_file.major_version,
         class_file.access_flags,
@@ -11,6 +11,7 @@ pub fn pretty_print_text(class_file: &ClassFile) {
         class_file.interfaces_count,
         class_file.fields_count,
         class_file.methods_count,
+        class_file.attributes_count,
     );
 
     println!("Constant pool({}):", class_file.constant_pool_count);
