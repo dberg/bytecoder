@@ -1,4 +1,5 @@
-use crate::ast::{AttributeInfo, ClassFile, CpInfo, ExceptionTable, FieldInfo, MethodInfo};
+use crate::ast::{AttributeInfo, ClassFile, CpInfo, ExceptionTable, FieldInfo, LineNumberTableItem, MethodInfo};
+use crate::ast::AttributeInfo::LineNumberTable;
 
 pub fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
     let idx: usize = 0;
@@ -194,7 +195,7 @@ fn parse_attribute_info(idx: usize, cp_info: &Vec<CpInfo>, bytecode: &Vec<u8>) -
             "EnclosingMethod" => todo!(),
             "Exceptions" => todo!(),
             "InnerClasses" => todo!(),
-            "LineNumberTable" => todo!(),
+            "LineNumberTable" => parse_attribute_info_line_number_table(idx, attribute_name_index, attribute_length, bytecode),
             "LocalVariableTable" => todo!(),
             "LocalVariableTypeTable" => todo!(),
             "MethodParameters" => todo!(),
@@ -260,6 +261,34 @@ fn parse_attribute_info_code(idx: usize, attribute_name_index: u16, attribute_le
 
 fn parse_exception_table(idx: usize, bytecode: &Vec<u8>) -> (usize, ExceptionTable) {
     todo!()
+}
+
+fn parse_attribute_info_line_number_table(idx: usize, attribute_name_index: u16, attribute_length: u32, bytecode: &Vec<u8>) -> (usize, AttributeInfo) {
+    let (idx, line_number_table_length) = get_u2(idx, bytecode);
+    let mut line_number_tables: Vec<LineNumberTableItem> = Vec::with_capacity(line_number_table_length as usize);
+    let mut idx = idx;
+    for _ in 0..line_number_table_length as usize {
+        let (i, line_number_table_item) = parse_attribute_info_line_number_table_item(idx, bytecode);
+        idx = i;
+        line_number_tables.push(line_number_table_item);
+    }
+    let line_number_table = LineNumberTable {
+        attribute_name_index,
+        attribute_length,
+        line_number_table_length,
+        line_number_tables
+    };
+    (idx, line_number_table)
+}
+
+fn parse_attribute_info_line_number_table_item(idx: usize, bytecode: &Vec<u8>) -> (usize, LineNumberTableItem) {
+    let (idx, start_pc) = get_u2(idx, bytecode);
+    let (idx, line_number) = get_u2(idx, bytecode);
+    let  line_number_table_item = LineNumberTableItem {
+        start_pc,
+        line_number
+    };
+    (idx, line_number_table_item)
 }
 
 fn get_u1(idx: usize, bytecode: &Vec<u8>) -> (usize, u8) {

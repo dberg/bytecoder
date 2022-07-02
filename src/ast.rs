@@ -59,7 +59,6 @@ pub struct MethodInfo {
 pub enum AttributeInfo {
     ConstantValue { attribute_name_index: u16, attribute_length: u32, constantvalue_index: u16 },
     Code { attribute_name_index: u16, attribute_length: u32, max_stack: u16, max_locals: u16, code_length: u32, code: Vec<u8>, exception_table_length: u16, exception_table: Vec<ExceptionTable>, attributes_count: u16, attributes: Vec<AttributeInfo> },
-    // TODO:
     StackMapTable {},
     Exceptions {},
     InnerClasses {},
@@ -68,7 +67,7 @@ pub enum AttributeInfo {
     Signature {},
     SourceFile {},
     SourceDebugExtension {},
-    LineNumberTable {},
+    LineNumberTable { attribute_name_index: u16, attribute_length: u32, line_number_table_length: u16, line_number_tables: Vec<LineNumberTableItem> },
     LocalVariableTable {},
     LocalVariableTypeTable {},
     Deprecated {},
@@ -96,4 +95,10 @@ pub struct ExceptionTable {
     end_pc: u16,
     handler_pc: u16,
     catch_type: u16
+}
+
+#[derive(Debug)]
+pub struct LineNumberTableItem {
+    pub start_pc: u16,
+    pub line_number: u16
 }
