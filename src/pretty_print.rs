@@ -33,19 +33,30 @@ pub fn pretty_print_text(class_file: &ClassFile) {
 }
 
 fn cp_info_to_string(idx: usize, cp_info: &Vec<CpInfo>) -> String {
-    match cp_info[idx] {
-        CpInfo::ConstantClass { .. } => todo!(),
-        CpInfo::ConstantFieldref { .. } => todo!(),
+    match &cp_info[idx] {
+        CpInfo::ConstantClass { tag: _tag, name_index } =>
+            format!("  #{} = Class\t#{}\t// {}", idx, name_index, get_constant_utf8(name_index.clone(), cp_info)),
+        CpInfo::ConstantFieldref { tag, class_index, name_and_type_index } => {
+            let class_name = get_constant_class_name(class_index.clone(), cp_info);
+            let field_name = get_name(name_and_type_index.clone(), cp_info);
+            let field_type = get_type(name_and_type_index.clone(), cp_info);
+            format!("  #{} = Fieldref\t#{}.#{}\t// {}.{}:{}", idx, class_index, name_and_type_index, class_name, field_name, field_type)
+        },
         CpInfo::ConstantMethodref { tag: _tag, class_index, name_and_type_index } => {
-            let class_name = get_constant_class_name(class_index, cp_info);
-            let method_name = get_method_name(name_and_type_index, cp_info);
-            let method_type = get_method_type(name_and_type_index, cp_info);
+            let class_name = get_constant_class_name(class_index.clone(), cp_info);
+            let method_name = get_name(name_and_type_index.clone(), cp_info);
+            let method_type = get_type(name_and_type_index.clone(), cp_info);
             format!("  #{} = Methodref\t#{}.#{}\t// {}.{}:{}", idx, class_index, name_and_type_index, class_name, method_name, method_type)
         },
-        CpInfo::ConstantString { .. } => todo!(),
-        CpInfo::ConstantNameAndType { tag: _tag, name_index, descriptor_index } =>
-            format!("  #{} NameAndType\t#{}:#{}\t//TODO", idx, name_index, descriptor_index),
-        CpInfo::ConstantUtf8 { .. } => todo!(),
+        CpInfo::ConstantString { tag, string_index } =>
+            format!("  #{} String = #{}\t// {}", idx, string_index, get_constant_utf8(string_index.clone(), cp_info)),
+        CpInfo::ConstantNameAndType { tag: _tag, name_index, descriptor_index } => {
+            let name = get_constant_utf8(name_index.clone(), cp_info);
+            let typename = get_constant_utf8(descriptor_index.clone(), cp_info);
+            format!("  #{} = NameAndType\t#{}:#{}\t// {}:{}", idx, name_index, descriptor_index, name, typename)
+        },
+        CpInfo::ConstantUtf8 { tag: _tag, length: _length, bytes: _bytes, bytes_str } =>
+            format!("  #{} = Utf8\t{}", idx, bytes_str)
     }
 }
 
@@ -67,7 +78,7 @@ fn get_constant_utf8(name_index: u16, cp_info: &Vec<CpInfo>) -> String {
     }
 }
 
-fn get_method_name(name_and_type_index: u16, cp_info: &Vec<CpInfo>) -> String {
+fn get_name(name_and_type_index: u16, cp_info: &Vec<CpInfo>) -> String {
     let constant_name_and_type = &cp_info[name_and_type_index as usize];
     if let CpInfo::ConstantNameAndType { tag: _tag, name_index, descriptor_index: _descriptor_index } = constant_name_and_type {
         get_constant_utf8(name_index.clone(), cp_info)
@@ -76,7 +87,7 @@ fn get_method_name(name_and_type_index: u16, cp_info: &Vec<CpInfo>) -> String {
     }
 }
 
-fn get_method_type(name_and_type_index: u16, cp_info: &Vec<CpInfo>) -> String {
+fn get_type(name_and_type_index: u16, cp_info: &Vec<CpInfo>) -> String {
     let constant_name_and_type = &cp_info[name_and_type_index as usize];
     if let CpInfo::ConstantNameAndType { tag: _tag, name_index: _name_index, descriptor_index } = constant_name_and_type {
         get_constant_utf8(descriptor_index.clone(), cp_info)
