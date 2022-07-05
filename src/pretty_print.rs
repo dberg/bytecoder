@@ -1,11 +1,13 @@
+use std::collections::HashMap;
 use crate::ast::{ClassFile, CpInfo};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     println!("TODO: public class A");
-    println!("  minor version:{:x}\n  major version:{}\n  flags: {:x}\n  this_class: #{}\n  super_class: #{}\n  interfaces: {}, fields: {}, methods: {}, attributes: {}",
+    println!("  minor version: {:x}\n  major version: {}\n  flags: ({:#06x}) {}\n  this_class: #{}\n  super_class: #{}\n  interfaces: {}, fields: {}, methods: {}, attributes: {}",
         class_file.minor_version,
         class_file.major_version,
         class_file.access_flags,
+        get_flags_description(class_file.access_flags),
         class_file.this_class,
         class_file.super_class,
         class_file.interfaces_count,
@@ -15,15 +17,6 @@ pub fn pretty_print_text(class_file: &ClassFile) {
     );
 
     println!("Constant pool({}):", class_file.constant_pool_count - 1);
-
-    // TMP for debugging
-    for (idx, item) in class_file.cp_info.iter().enumerate() {
-        if idx != 0 {
-            println!("  #{}:{:?}", idx, item);
-        }
-    }
-
-    println!("\n\nWIP: Constant pool items");
     for (idx, _item) in class_file.cp_info.iter().enumerate() {
         if idx != 0 {
             let line = cp_info_to_string(idx, &class_file.cp_info);
@@ -58,6 +51,33 @@ fn cp_info_to_string(idx: usize, cp_info: &Vec<CpInfo>) -> String {
         CpInfo::ConstantUtf8 { tag: _tag, length: _length, bytes: _bytes, bytes_str } =>
             format!("  #{} = Utf8\t{}", idx, bytes_str)
     }
+}
+
+fn get_flags_description(flags: u16) -> String {
+    let mut flags_desc = get_flags(flags);
+    flags_desc.sort();
+    flags_desc.join(", ")
+}
+
+fn get_flags(flags: u16) -> Vec<String> {
+    let flag_to_description: HashMap<u16, &str> = HashMap::from([
+        (0x0001, "ACC_PUBLIC"),
+        (0x0010, "ACC_FINAL"),
+        (0x0020, "ACC_SUPER"),
+        (0x0200, "ACC_INTERFACE"),
+        (0x0400, "ACC_ABSTRACT"),
+        (0x1000, "ACC_SYNTHETIC"),
+        (0x2000, "ACC_ANNOTATION"),
+        (0x4000, "ACC_ENUM"),
+        (0x8000, "ACC_MODULE"),
+    ]);
+    let mut flags_description: Vec<String> = Vec::new();
+    for (f, v) in flag_to_description {
+        if f & flags != 0 {
+            flags_description.push(String::from(v));
+        }
+    }
+    flags_description
 }
 
 fn get_constant_class_name(class_index: u16, cp_info: &Vec<CpInfo>) -> String {
