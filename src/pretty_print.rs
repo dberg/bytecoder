@@ -3,13 +3,22 @@ use crate::ast::{ClassFile, CpInfo};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     println!("TODO: public class A");
-    println!("  minor version: {:x}\n  major version: {}\n  flags: ({:#06x}) {}\n  this_class: #{}\n  super_class: #{}\n  interfaces: {}, fields: {}, methods: {}, attributes: {}",
+    println!("  \
+      minor version: {:x}\n  \
+      major version: {}\n  \
+      flags: ({:#06x}) {}\n  \
+      this_class: #{}\t// {}\n  \
+      super_class: #{}\t// {}\n  \
+      interfaces: {}  fields: {}, methods: {}, attributes: {}\
+      ",
         class_file.minor_version,
         class_file.major_version,
         class_file.access_flags,
         get_flags_description(class_file.access_flags),
         class_file.this_class,
+        get_constant_class_name(class_file.this_class, &class_file.cp_info),
         class_file.super_class,
+        get_constant_class_name(class_file.super_class, &class_file.cp_info),
         class_file.interfaces_count,
         class_file.fields_count,
         class_file.methods_count,
