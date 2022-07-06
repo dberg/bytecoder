@@ -1,4 +1,4 @@
-use crate::ast::{ClassFile, CpInfo, MethodInfo};
+use crate::ast::{AttributeInfo, ClassFile, CpInfo, MethodInfo};
 use crate::parser::{get_class_access_flags, get_method_access_flags};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
@@ -114,11 +114,84 @@ fn method_info_to_string(method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> Str
     let access_flags = get_method_access_flags(method_info.access_flags).join(" ");
     let method_name = get_constant_utf8(method_info.name_index, cp_info);
     let descriptor = get_constant_utf8(method_info.descriptor_index, cp_info);
-    format!("{} {}\n    descriptor: {}\n    flags: ({:#06x}) {}\n    Code: TODO",
+    let attributes = method_info_attributes(method_info);
+    format!("{} {}\n    \
+        descriptor: {}\n    \
+        flags: ({:#06x}) {}\n\
+        {}",
         access_flags,
         method_name,
         descriptor,
         method_info.access_flags,
         access_flags,
+        attributes.join("\n")
     )
+}
+
+fn method_info_attributes(method_info: &MethodInfo) -> Vec<String> {
+    let mut attributes: Vec<String> = Vec::with_capacity(method_info.attributes_count as usize);
+    for attribute in method_info.attributes.iter() {
+        attributes.push(method_info_attribute(attribute));
+    }
+    attributes
+}
+
+fn method_info_attribute(attribute_info: &AttributeInfo) -> String {
+    match attribute_info {
+        AttributeInfo::ConstantValue { .. } => todo!(),
+        code @ AttributeInfo::Code { .. } => method_attribute_info_code(code),
+        AttributeInfo::StackMapTable { .. } => todo!(),
+        AttributeInfo::Exceptions { .. } => todo!(),
+        AttributeInfo::InnerClasses { .. } => todo!(),
+        AttributeInfo::EnclosingMethod { .. } => todo!(),
+        AttributeInfo::Synthetic { .. } => todo!(),
+        AttributeInfo::Signature { .. } => todo!(),
+        AttributeInfo::SourceFile { .. } => todo!(),
+        AttributeInfo::SourceDebugExtension { .. } => todo!(),
+        AttributeInfo::LineNumberTable { .. } => todo!(),
+        AttributeInfo::LocalVariableTable { .. } => todo!(),
+        AttributeInfo::LocalVariableTypeTable { .. } => todo!(),
+        AttributeInfo::Deprecated { .. } => todo!(),
+        AttributeInfo::RuntimeVisibleAnnotations { .. } => todo!(),
+        AttributeInfo::RuntimeInvisibleAnnotations { .. } => todo!(),
+        AttributeInfo::RuntimeVisibleParameterAnnotations { .. } => todo!(),
+        AttributeInfo::RuntimeInvisibleParameterAnnotations { .. } => todo!(),
+        AttributeInfo::RuntimeVisibleTypeAnnotations { .. } => todo!(),
+        AttributeInfo::RuntimeInvisibleTypeAnnotations { .. } => todo!(),
+        AttributeInfo::AnnotationDefault { .. } => todo!(),
+        AttributeInfo::BootstrapMethods { .. } => todo!(),
+        AttributeInfo::MethodParameters { .. } => todo!(),
+        AttributeInfo::Module { .. } => todo!(),
+        AttributeInfo::ModulePackages { .. } => todo!(),
+        AttributeInfo::ModuleMainClass { .. } => todo!(),
+        AttributeInfo::NestHost { .. } => todo!(),
+        AttributeInfo::NestMembers { .. } => todo!(),
+        AttributeInfo::Record { .. } => todo!(),
+        AttributeInfo::PermittedSubclasses { .. } => todo!()
+    }
+}
+
+fn method_attribute_info_code(code: &AttributeInfo) -> String {
+    if let AttributeInfo::Code {
+        attribute_name_index,
+        attribute_length,
+        max_stack,
+        max_locals,
+        code_length,
+        code,
+        exception_table_length,
+        exception_table,
+        attributes_count,
+        attributes
+    } = code {
+        format!(
+            "    Code:\n      \
+            stack={}, locals={}, args_size=TODO\n\
+            ",
+            max_stack,
+            max_locals
+        )
+    } else {
+        panic!("Expected AttributeInfo::Code")
+    }
 }
