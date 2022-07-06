@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::ast::{AttributeInfo, ClassFile, CpInfo, ExceptionTable, FieldInfo, LineNumberTableItem, MethodInfo};
 use crate::ast::AttributeInfo::{LineNumberTable, SourceFile};
 
@@ -319,5 +320,52 @@ fn get_u4(idx: usize, bytecode: &Vec<u8>) -> (usize, u32) {
     let u3 = bytecode[idx + 3] as u32;
     let r: u32 = u0 | u1 | u2 | u3;
     (idx + 4, r)
+}
+
+pub fn get_class_access_flags(flags: u16) -> Vec<String> {
+    let flag_to_description: HashMap<u16, &str> = HashMap::from([
+        (0x0001, "ACC_PUBLIC"),
+        (0x0010, "ACC_FINAL"),
+        (0x0020, "ACC_SUPER"),
+        (0x0200, "ACC_INTERFACE"),
+        (0x0400, "ACC_ABSTRACT"),
+        (0x1000, "ACC_SYNTHETIC"),
+        (0x2000, "ACC_ANNOTATION"),
+        (0x4000, "ACC_ENUM"),
+        (0x8000, "ACC_MODULE"),
+    ]);
+    let mut descriptions: Vec<String> = Vec::new();
+    for (f, v) in flag_to_description {
+        if f & flags != 0 {
+            descriptions.push(String::from(v));
+        }
+    }
+    descriptions.sort();
+    descriptions
+}
+
+pub fn get_method_access_flags(flags: u16) -> Vec<String> {
+    let flag_to_description: HashMap<u16, &str> = HashMap::from([
+        (0x0001, "ACC_PUBLIC"),
+        (0x0002, "ACC_PRIVATE"),
+        (0x0004, "ACC_PROTECTED"),
+        (0x0008, "ACC_STATIC"),
+        (0x0010, "ACC_FINAL"),
+        (0x0020, "ACC_SYNCHRONIZED"),
+        (0x0040, "ACC_BRIDGE"),
+        (0x0080, "ACC_VARARGS"),
+        (0x0100, "ACC_NATIVE"),
+        (0x0400, "ACC_ABSTRACT"),
+        (0x0800, "ACC_STRICT"),
+        (0x1000, "ACC_SYNTHETIC")
+    ]);
+    let mut descriptions: Vec<String> = Vec::new();
+    for (f, v) in flag_to_description {
+        if f & flags != 0 {
+            descriptions.push(String::from(v))
+        }
+    }
+    descriptions.sort();
+    descriptions
 }
 

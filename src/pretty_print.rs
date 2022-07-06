@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::ast::{ClassFile, CpInfo, MethodInfo};
+use crate::parser::{get_class_access_flags, get_method_access_flags};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     println!("TODO: public class A");
@@ -14,7 +14,7 @@ pub fn pretty_print_text(class_file: &ClassFile) {
         class_file.minor_version,
         class_file.major_version,
         class_file.access_flags,
-        get_flags_description(class_file.access_flags),
+        get_class_access_flags(class_file.access_flags).join(", "),
         class_file.this_class,
         get_constant_class_name(class_file.this_class, &class_file.cp_info),
         class_file.super_class,
@@ -39,7 +39,7 @@ pub fn pretty_print_text(class_file: &ClassFile) {
     }
 
     println!("{{");
-    for (idx, method_info) in class_file.methods.iter().enumerate() {
+    for method_info in class_file.methods.iter() {
         let method_str = method_info_to_string(method_info, &class_file.cp_info);
         println!("  {}", method_str);
     }
@@ -72,33 +72,6 @@ fn cp_info_to_string(idx: usize, cp_info: &Vec<CpInfo>) -> String {
         CpInfo::ConstantUtf8 { tag: _tag, length: _length, bytes: _bytes, bytes_str } =>
             format!("  #{} = Utf8\t{}", idx, bytes_str)
     }
-}
-
-fn get_flags_description(flags: u16) -> String {
-    let mut flags_desc = get_flags(flags);
-    flags_desc.sort();
-    flags_desc.join(", ")
-}
-
-fn get_flags(flags: u16) -> Vec<String> {
-    let flag_to_description: HashMap<u16, &str> = HashMap::from([
-        (0x0001, "ACC_PUBLIC"),
-        (0x0010, "ACC_FINAL"),
-        (0x0020, "ACC_SUPER"),
-        (0x0200, "ACC_INTERFACE"),
-        (0x0400, "ACC_ABSTRACT"),
-        (0x1000, "ACC_SYNTHETIC"),
-        (0x2000, "ACC_ANNOTATION"),
-        (0x4000, "ACC_ENUM"),
-        (0x8000, "ACC_MODULE"),
-    ]);
-    let mut flags_description: Vec<String> = Vec::new();
-    for (f, v) in flag_to_description {
-        if f & flags != 0 {
-            flags_description.push(String::from(v));
-        }
-    }
-    flags_description
 }
 
 fn get_constant_class_name(class_index: u16, cp_info: &Vec<CpInfo>) -> String {
@@ -138,10 +111,10 @@ fn get_type(name_and_type_index: u16, cp_info: &Vec<CpInfo>) -> String {
 }
 
 fn method_info_to_string(method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> String {
-    let access_flags = get_flags(method_info.access_flags).join(", ");
+    let access_flags = get_method_access_flags(method_info.access_flags).join(" ");
     let method_name = get_constant_utf8(method_info.name_index, cp_info);
     let descriptor = get_constant_utf8(method_info.descriptor_index, cp_info);
-    format!("{} {}\n    descriptor: {}\n    flags: ({:#06x}) {}\nTODO",
+    format!("{} {}\n    descriptor: {}\n    flags: ({:#06x}) {}\n    Code: TODO",
         access_flags,
         method_name,
         descriptor,
