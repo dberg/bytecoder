@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::ast::{ClassFile, CpInfo};
+use crate::ast::{ClassFile, CpInfo, MethodInfo};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     println!("TODO: public class A");
@@ -32,6 +32,18 @@ pub fn pretty_print_text(class_file: &ClassFile) {
             println!("{}", line);
         }
     }
+
+    // TMP debugging
+    for method_info in class_file.methods.iter() {
+        println!("{:?}", method_info);
+    }
+
+    println!("{{");
+    for (idx, method_info) in class_file.methods.iter().enumerate() {
+        let method_str = method_info_to_string(method_info, &class_file.cp_info);
+        println!("  {}", method_str);
+    }
+    println!("}}");
 }
 
 fn cp_info_to_string(idx: usize, cp_info: &Vec<CpInfo>) -> String {
@@ -123,4 +135,17 @@ fn get_type(name_and_type_index: u16, cp_info: &Vec<CpInfo>) -> String {
     } else {
         panic!("Expected ConstantNameAndType at idx {}", name_and_type_index)
     }
+}
+
+fn method_info_to_string(method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> String {
+    let access_flags = get_flags(method_info.access_flags).join(", ");
+    let method_name = get_constant_utf8(method_info.name_index, cp_info);
+    let descriptor = get_constant_utf8(method_info.descriptor_index, cp_info);
+    format!("{} {}\n    descriptor: {}\n    flags: ({:#06x}) {}\nTODO",
+        access_flags,
+        method_name,
+        descriptor,
+        method_info.access_flags,
+        access_flags,
+    )
 }
