@@ -4,6 +4,7 @@ use crate::pretty_print::pretty_print_text;
 mod ast;
 mod parser;
 mod pretty_print;
+mod opcodes;
 
 fn main() {
 

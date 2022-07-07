@@ -1,4 +1,5 @@
 use crate::ast::{AttributeInfo, ClassFile, CpInfo, MethodInfo};
+use crate::opcodes::get_opcode;
 use crate::parser::{get_class_access_flags, get_method_access_flags};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
@@ -184,14 +185,28 @@ fn method_attribute_info_code(code: &AttributeInfo) -> String {
         attributes_count,
         attributes
     } = code {
+        let instructions_block = instructions_block(code);
         format!(
             "    Code:\n      \
             stack={}, locals={}, args_size=TODO\n\
-            ",
+            {}",
             max_stack,
-            max_locals
+            max_locals,
+            instructions_block
         )
     } else {
         panic!("Expected AttributeInfo::Code")
     }
+}
+
+fn instructions_block(code: &Vec<u8>) -> String {
+    let mut acc: Vec<String> = Vec::new();
+    // TODO: need to interpret the opcodes
+    for i in 0..code.len() {
+        let opcode = get_opcode(code[i]);
+        let opcode_str = opcode.str();
+        let line = format!("         {}: {}", i, opcode_str);
+        acc.push(line);
+    }
+    acc.join("\n")
 }
