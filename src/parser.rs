@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 use crate::ast::{AttributeInfo, ClassFile, CpInfo, ExceptionTable, FieldInfo, LineNumberTableItem, MethodInfo};
 use crate::ast::AttributeInfo::{LineNumberTable, SourceFile};
@@ -147,7 +149,7 @@ fn parse_fields(idx: usize, fields_count: u16, bytecode: &Vec<u8>) -> (usize, Ve
     (idx, fields)
 }
 
-fn parse_field_info(idx: usize, bytecode: &Vec<u8>) -> (usize, FieldInfo) {
+fn parse_field_info(_idx: usize, _bytecode: &Vec<u8>) -> (usize, FieldInfo) {
     todo!()
 }
 
@@ -264,7 +266,7 @@ fn parse_attribute_info_code(idx: usize, attribute_name_index: u16, attribute_le
     (idx, attribute_info_code)
 }
 
-fn parse_exception_table(idx: usize, bytecode: &Vec<u8>) -> (usize, ExceptionTable) {
+fn parse_exception_table(_idx: usize, _bytecode: &Vec<u8>) -> (usize, ExceptionTable) {
     todo!()
 }
 

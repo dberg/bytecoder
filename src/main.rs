@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::parser::parse_class_file;
 use crate::pretty_print::pretty_print_text;
 

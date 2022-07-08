@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::ast::{AttributeInfo, ClassFile, CpInfo, MethodInfo};
 use crate::opcodes::{get_opcode, Opcode};
 use crate::parser::{get_class_access_flags, get_method_access_flags, get_u1, get_u2};
@@ -53,7 +54,7 @@ fn cp_info_to_string(idx: usize, cp_info: &Vec<CpInfo>) -> String {
             let idx_prefix = cp_info_index_prefix(idx);
             format!("{} = {:20}#{:<14}// {}", idx_prefix, "Class", name_index, get_constant_utf8(name_index.clone(), cp_info))
         },
-        CpInfo::ConstantFieldref { tag, class_index, name_and_type_index } => {
+        CpInfo::ConstantFieldref { tag: _tag, class_index, name_and_type_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
             let class_name = get_constant_class_name(class_index.clone(), cp_info);
             let field_name = get_name(name_and_type_index.clone(), cp_info);
@@ -69,7 +70,7 @@ fn cp_info_to_string(idx: usize, cp_info: &Vec<CpInfo>) -> String {
             let method_indexes = format!("#{}.#{}", class_index, name_and_type_index);
             format!("{} = {:20}{:15}// {}.{}:{}", idx_prefix, "Methodref", method_indexes, class_name, method_name, method_type)
         },
-        CpInfo::ConstantString { tag, string_index } => {
+        CpInfo::ConstantString { tag: _tag, string_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
             format!("{} = {:20}#{:<14}\t// {}", idx_prefix, "String", string_index, get_constant_utf8(string_index.clone(), cp_info))
         },
@@ -189,18 +190,19 @@ fn method_info_attribute(attribute_info: &AttributeInfo) -> String {
     }
 }
 
+
 fn method_attribute_info_code(code: &AttributeInfo) -> String {
     if let AttributeInfo::Code {
-        attribute_name_index,
-        attribute_length,
+        attribute_name_index: _attribute_name_index,
+        attribute_length: _attribute_length,
         max_stack,
         max_locals,
-        code_length,
+        code_length: _code_length,
         code,
-        exception_table_length,
-        exception_table,
-        attributes_count,
-        attributes
+        exception_table_length: _exception_table_length,
+        exception_table: _exception_table,
+        attributes_count: _attributes_count,
+        attributes: _attributes
     } = code {
         let instructions_block = instructions_block(code);
         format!(
