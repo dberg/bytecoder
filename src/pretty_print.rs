@@ -51,35 +51,38 @@ fn cp_info_to_string(idx: usize, cp_info: &Vec<CpInfo>) -> String {
     match &cp_info[idx] {
         CpInfo::ConstantClass { tag: _tag, name_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
-            format!("{} = Class\t#{}\t// {}", idx_prefix, name_index, get_constant_utf8(name_index.clone(), cp_info))
+            format!("{} = {:20}#{:<14}// {}", idx_prefix, "Class", name_index, get_constant_utf8(name_index.clone(), cp_info))
         },
         CpInfo::ConstantFieldref { tag, class_index, name_and_type_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
             let class_name = get_constant_class_name(class_index.clone(), cp_info);
             let field_name = get_name(name_and_type_index.clone(), cp_info);
             let field_type = get_type(name_and_type_index.clone(), cp_info);
-            format!("{} = Fieldref\t#{}.#{}\t// {}.{}:{}", idx_prefix, class_index, name_and_type_index, class_name, field_name, field_type)
+            let field_indexes = format!("#{}.#{}", class_index, name_and_type_index);
+            format!("{} = {:20}{:15}// {}.{}:{}", idx_prefix, "Fieldref", field_indexes, class_name, field_name, field_type)
         },
         CpInfo::ConstantMethodref { tag: _tag, class_index, name_and_type_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
             let class_name = get_constant_class_name(class_index.clone(), cp_info);
             let method_name = get_name(name_and_type_index.clone(), cp_info);
             let method_type = get_type(name_and_type_index.clone(), cp_info);
-            format!("{} = Methodref\t#{}.#{}\t// {}.{}:{}", idx_prefix, class_index, name_and_type_index, class_name, method_name, method_type)
+            let method_indexes = format!("#{}.#{}", class_index, name_and_type_index);
+            format!("{} = {:20}{:15}// {}.{}:{}", idx_prefix, "Methodref", method_indexes, class_name, method_name, method_type)
         },
         CpInfo::ConstantString { tag, string_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
-            format!("{} String = #{}\t// {}", idx_prefix, string_index, get_constant_utf8(string_index.clone(), cp_info))
+            format!("{} = {:20}#{:<14}\t// {}", idx_prefix, "String", string_index, get_constant_utf8(string_index.clone(), cp_info))
         },
         CpInfo::ConstantNameAndType { tag: _tag, name_index, descriptor_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
             let name = get_constant_utf8(name_index.clone(), cp_info);
             let typename = get_constant_utf8(descriptor_index.clone(), cp_info);
-            format!("{} = NameAndType\t#{}:#{}\t// {}:{}", idx_prefix, name_index, descriptor_index, name, typename)
+            let name_and_type_indexes = format!("#{}:#{}", name_index, descriptor_index);
+            format!("{} = {:20}{:15}// {}:{}", idx_prefix, "NameAndType", name_and_type_indexes, name, typename)
         },
         CpInfo::ConstantUtf8 { tag: _tag, length: _length, bytes: _bytes, bytes_str } => {
             let idx_prefix = cp_info_index_prefix(idx);
-            format!("{} = Utf8\t{}", idx_prefix, bytes_str)
+            format!("{} = {:20}{}", idx_prefix, "Utf8", bytes_str)
         }
     }
 }
