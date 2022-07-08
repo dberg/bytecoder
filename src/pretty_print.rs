@@ -1,6 +1,6 @@
 use crate::ast::{AttributeInfo, ClassFile, CpInfo, MethodInfo};
 use crate::opcodes::{get_opcode, Opcode};
-use crate::parser::{get_class_access_flags, get_method_access_flags, get_u2};
+use crate::parser::{get_class_access_flags, get_method_access_flags, get_u1, get_u2};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     println!("TODO: public class A");
@@ -201,12 +201,13 @@ fn method_attribute_info_code(code: &AttributeInfo) -> String {
 
 fn instructions_block(code: &Vec<u8>) -> String {
     let mut acc: Vec<String> = Vec::new();
-    for mut i in 0..code.len() {
+    let mut i: usize = 0;
+    while i < code.len() {
         let opcode = get_opcode(code[i]);
         let (new_i, opcode_args_string) = instruction_args(i, &opcode, code);
-        i = new_i;
         let line = format!("         {}: {}\t{}", i, opcode.str(), opcode_args_string);
         acc.push(line);
+        i = new_i;
     }
     acc.join("\n")
 }
@@ -214,7 +215,7 @@ fn instructions_block(code: &Vec<u8>) -> String {
 fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>) -> (usize, String) {
     match opcode {
         Opcode::Nop => (opcode_idx + 1, String::from("")),
-        Opcode::AconstNull => todo!(),
+        Opcode::AconstNull => todo!("opcode_idx[{}]", opcode_idx),
         Opcode::IconstM1 => todo!(),
         Opcode::Iconst0 => todo!(),
         Opcode::Iconst1 => todo!(),
@@ -228,12 +229,12 @@ fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>) -> (usiz
         Opcode::Fconst1 => todo!(),
         Opcode::Fconst2 => todo!(),
         Opcode::Dconst0 => todo!(),
-        Opcode::Dconst1 => todo!(),
+        Opcode::Dconst1 => todo!("opcode_idx[{}] in {:?}", opcode_idx, code),
         Opcode::Bipush => todo!(),
         Opcode::Sipush => todo!(),
         Opcode::Ldc => {
             // Push item from run-time constant pool
-            let (new_idx, index) = get_u2(opcode_idx + 1, code);
+            let (new_idx, index) = get_u1(opcode_idx + 1, code);
             (new_idx, format!("#{}", index))
         },
         Opcode::LdcW => todo!(),
@@ -259,7 +260,10 @@ fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>) -> (usiz
         Opcode::Dload1 => todo!(),
         Opcode::Dload2 => todo!(),
         Opcode::Dload3 => todo!(),
-        Opcode::Aload0 => todo!(),
+        Opcode::Aload0 => {
+            // Load reference from local variable
+            (opcode_idx + 1, String::from(""))
+        },
         Opcode::Aload1 => todo!(),
         Opcode::Aload2 => todo!(),
         Opcode::Aload3 => todo!(),
@@ -411,7 +415,11 @@ fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>) -> (usiz
             let (new_idx, index) = get_u2(opcode_idx + 1, code);
             (new_idx, format!("#{}", index))
         },
-        Opcode::Invokespecial => todo!(),
+        Opcode::Invokespecial => {
+            // Invoke instance method; direct invocation of instance initialization methods and methods of the current class and its supertypes
+            let (new_idx, index) = get_u2(opcode_idx + 1, code);
+            (new_idx, format!("#{}", index))
+        },
         Opcode::Invokestatic => todo!(),
         Opcode::Invokeinterface => todo!(),
         Opcode::Invokedynamic => todo!(),
