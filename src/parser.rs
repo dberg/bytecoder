@@ -302,11 +302,11 @@ fn parse_attribute_info_source_file(idx: usize, attribute_name_index: u16, attri
     (idx, source_file)
 }
 
-fn get_u1(idx: usize, bytecode: &Vec<u8>) -> (usize, u8) {
+pub fn get_u1(idx: usize, bytecode: &Vec<u8>) -> (usize, u8) {
     (idx + 1, bytecode[idx])
 }
 
-fn get_u2(idx: usize, bytecode: &Vec<u8>) -> (usize, u16) {
+pub fn get_u2(idx: usize, bytecode: &Vec<u8>) -> (usize, u16) {
     let u0 = (bytecode[idx] as u16) << 8;
     let u1 = bytecode[idx + 1] as u16;
     let r: u16 = u0 | u1;
