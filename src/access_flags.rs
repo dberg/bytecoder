@@ -66,27 +66,80 @@ impl ClassAccessFlag {
     }
 }
 
-pub fn get_method_access_flags(flags: u16) -> Vec<String> {
-    let flag_to_description: HashMap<u16, &str> = HashMap::from([
-        (0x0001, "ACC_PUBLIC"),
-        (0x0002, "ACC_PRIVATE"),
-        (0x0004, "ACC_PROTECTED"),
-        (0x0008, "ACC_STATIC"),
-        (0x0010, "ACC_FINAL"),
-        (0x0020, "ACC_SYNCHRONIZED"),
-        (0x0040, "ACC_BRIDGE"),
-        (0x0080, "ACC_VARARGS"),
-        (0x0100, "ACC_NATIVE"),
-        (0x0400, "ACC_ABSTRACT"),
-        (0x0800, "ACC_STRICT"),
-        (0x1000, "ACC_SYNTHETIC")
-    ]);
-    let mut descriptions: Vec<String> = Vec::new();
-    for (f, v) in flag_to_description {
-        if f & flags != 0 {
-            descriptions.push(String::from(v))
+#[derive(PartialOrd, Ord, PartialEq, Eq)]
+pub enum MethodAccessFlag {
+    AccPublic,
+    AccPrivate,
+    AccProtected,
+    AccStatic,
+    AccFinal,
+    AccSynchronized,
+    AccBridge,
+    AccVarargs,
+    AccNative,
+    AccAbstract,
+    AccStrict,
+    AccSynthetic
+}
+
+impl MethodAccessFlag {
+    pub fn to_str(&self) -> &str {
+        match self {
+            MethodAccessFlag::AccPublic => "ACC_PUBLIC",
+            MethodAccessFlag::AccPrivate => "ACC_PRIVATE",
+            MethodAccessFlag::AccProtected => "ACC_PROTECTED",
+            MethodAccessFlag::AccStatic => "ACC_STATIC",
+            MethodAccessFlag::AccFinal => "ACC_FINAL",
+            MethodAccessFlag::AccSynchronized => "ACC_SYNCHRONIZED",
+            MethodAccessFlag::AccBridge => "ACC_BRIDGE",
+            MethodAccessFlag::AccVarargs => "ACC_VARARGS",
+            MethodAccessFlag::AccNative => "ACC_NATIVE",
+            MethodAccessFlag::AccAbstract => "ACC_ABSTRACT",
+            MethodAccessFlag::AccStrict => "ACC_STRICT",
+            MethodAccessFlag::AccSynthetic => "ACC_SYNTHETIC"
         }
     }
-    descriptions.sort();
-    descriptions
+
+    pub fn to_java_code(&self) -> &str {
+        match self {
+            MethodAccessFlag::AccPublic => "public",
+            MethodAccessFlag::AccPrivate => "private",
+            MethodAccessFlag::AccProtected => "protected",
+            MethodAccessFlag::AccStatic => "static",
+            MethodAccessFlag::AccFinal => "final",
+            MethodAccessFlag::AccSynchronized => "synchronized",
+            MethodAccessFlag::AccBridge => "bridge",
+            MethodAccessFlag::AccVarargs => "varargs",
+            MethodAccessFlag::AccNative => "native",
+            MethodAccessFlag::AccAbstract => "abstract",
+            MethodAccessFlag::AccStrict => "strict",
+            MethodAccessFlag::AccSynthetic => "synthetic"
+        }
+    }
+
+    pub fn parse_flags(flags: u16) -> Vec<MethodAccessFlag> {
+        let flag_to_method_access_flag: HashMap<u16, MethodAccessFlag> = HashMap::from([
+            (0x0001, MethodAccessFlag::AccPublic),
+            (0x0002, MethodAccessFlag::AccPrivate),
+            (0x0004, MethodAccessFlag::AccProtected),
+            (0x0008, MethodAccessFlag::AccStatic),
+            (0x0010, MethodAccessFlag::AccFinal),
+            (0x0020, MethodAccessFlag::AccSynchronized),
+            (0x0040, MethodAccessFlag::AccBridge),
+            (0x0080, MethodAccessFlag::AccVarargs),
+            (0x0100, MethodAccessFlag::AccNative),
+            (0x0400, MethodAccessFlag::AccAbstract),
+            (0x0800, MethodAccessFlag::AccStrict),
+            (0x1000, MethodAccessFlag::AccSynthetic)
+        ]);
+
+        let mut descriptions: Vec<MethodAccessFlag> = Vec::new();
+        for (f, v) in flag_to_method_access_flag {
+            if f & flags != 0 {
+                descriptions.push(v)
+            }
+        }
+        descriptions.sort();
+        descriptions
+    }
 }
