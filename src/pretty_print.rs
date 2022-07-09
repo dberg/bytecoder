@@ -5,21 +5,23 @@ use crate::parser::{get_class_access_flags, get_method_access_flags, get_u1, get
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     println!("TODO: public class A");
+    let this_class = format!("this_class: #{}", class_file.this_class);
+    let super_class = format!("super_class: #{}", class_file.super_class);
     println!("  \
       minor version: {:x}\n  \
       major version: {}\n  \
       flags: ({:#06x}) {}\n  \
-      this_class: #{}\t// {}\n  \
-      super_class: #{}\t// {}\n  \
-      interfaces: {}  fields: {}, methods: {}, attributes: {}\
+      {:<40}// {}\n  \
+      {:<40}// {}\n  \
+      interfaces: {}, fields: {}, methods: {}, attributes: {}\
       ",
         class_file.minor_version,
         class_file.major_version,
         class_file.access_flags,
         get_class_access_flags(class_file.access_flags).join(", "),
-        class_file.this_class,
+        this_class,
         get_constant_class_name(class_file.this_class, &class_file.cp_info),
-        class_file.super_class,
+        super_class,
         get_constant_class_name(class_file.super_class, &class_file.cp_info),
         class_file.interfaces_count,
         class_file.fields_count,
@@ -52,7 +54,7 @@ fn cp_info_to_string(idx: usize, cp_info: &Vec<CpInfo>) -> String {
     match &cp_info[idx] {
         CpInfo::ConstantClass { tag: _tag, name_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
-            format!("{} = {:20}#{:<14}// {}", idx_prefix, "Class", name_index, get_constant_utf8(name_index.clone(), cp_info))
+            format!("{} = {:19}#{:<14}// {}", idx_prefix, "Class", name_index, get_constant_utf8(name_index.clone(), cp_info))
         },
         CpInfo::ConstantFieldref { tag: _tag, class_index, name_and_type_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
@@ -60,7 +62,7 @@ fn cp_info_to_string(idx: usize, cp_info: &Vec<CpInfo>) -> String {
             let field_name = get_name(name_and_type_index.clone(), cp_info);
             let field_type = get_type(name_and_type_index.clone(), cp_info);
             let field_indexes = format!("#{}.#{}", class_index, name_and_type_index);
-            format!("{} = {:20}{:15}// {}.{}:{}", idx_prefix, "Fieldref", field_indexes, class_name, field_name, field_type)
+            format!("{} = {:19}{:15}// {}.{}:{}", idx_prefix, "Fieldref", field_indexes, class_name, field_name, field_type)
         },
         CpInfo::ConstantMethodref { tag: _tag, class_index, name_and_type_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
@@ -68,22 +70,22 @@ fn cp_info_to_string(idx: usize, cp_info: &Vec<CpInfo>) -> String {
             let method_name = get_name(name_and_type_index.clone(), cp_info);
             let method_type = get_type(name_and_type_index.clone(), cp_info);
             let method_indexes = format!("#{}.#{}", class_index, name_and_type_index);
-            format!("{} = {:20}{:15}// {}.{}:{}", idx_prefix, "Methodref", method_indexes, class_name, method_name, method_type)
+            format!("{} = {:19}{:15}// {}.{}:{}", idx_prefix, "Methodref", method_indexes, class_name, method_name, method_type)
         },
         CpInfo::ConstantString { tag: _tag, string_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
-            format!("{} = {:20}#{:<14}\t// {}", idx_prefix, "String", string_index, get_constant_utf8(string_index.clone(), cp_info))
+            format!("{} = {:19}#{:<14}// {}", idx_prefix, "String", string_index, get_constant_utf8(string_index.clone(), cp_info))
         },
         CpInfo::ConstantNameAndType { tag: _tag, name_index, descriptor_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
             let name = get_constant_utf8(name_index.clone(), cp_info);
             let typename = get_constant_utf8(descriptor_index.clone(), cp_info);
             let name_and_type_indexes = format!("#{}:#{}", name_index, descriptor_index);
-            format!("{} = {:20}{:15}// {}:{}", idx_prefix, "NameAndType", name_and_type_indexes, name, typename)
+            format!("{} = {:19}{:15}// {}:{}", idx_prefix, "NameAndType", name_and_type_indexes, name, typename)
         },
         CpInfo::ConstantUtf8 { tag: _tag, length: _length, bytes: _bytes, bytes_str } => {
             let idx_prefix = cp_info_index_prefix(idx);
-            format!("{} = {:20}{}", idx_prefix, "Utf8", bytes_str)
+            format!("{} = {:19}{}", idx_prefix, "Utf8", bytes_str)
         }
     }
 }
