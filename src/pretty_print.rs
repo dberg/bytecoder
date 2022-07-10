@@ -4,6 +4,7 @@ use crate::access_flags::{ClassAccessFlag, MethodAccessFlag};
 use crate::ast::{AttributeInfo, ClassFile, CpInfo, MethodInfo};
 use crate::opcodes::{get_opcode, Opcode};
 use crate::parser::{get_u1, get_u2};
+use crate::parser_helper::{get_constant_class_name, get_constant_utf8, get_name, get_type, method_arguments_count};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     println!("TODO: public class A");
@@ -102,49 +103,13 @@ fn cp_info_index_prefix(idx: usize) -> String {
     format!("{0:<1$}#{2}", " ", left_pad, idx)
 }
 
-fn get_constant_class_name(class_index: u16, cp_info: &Vec<CpInfo>) -> String {
-    let constant_class = &cp_info[class_index as usize];
-    if let CpInfo::ConstantClass { tag: _tag, name_index } = constant_class {
-        get_constant_utf8(name_index.clone(), cp_info)
-    } else {
-        panic!("Expected ConstantClass for idx {}", class_index)
-    }
-}
-
-fn get_constant_utf8(name_index: u16, cp_info: &Vec<CpInfo>) -> String {
-    let constant_utf8 = &cp_info[name_index as usize];
-    if let CpInfo::ConstantUtf8 { tag: _tag, length: _length, bytes: _bytes, bytes_str } = constant_utf8 {
-        bytes_str.clone()
-    } else {
-        panic!("Expected ConstantUtf8 for idx {}", name_index)
-    }
-}
-
-fn get_name(name_and_type_index: u16, cp_info: &Vec<CpInfo>) -> String {
-    let constant_name_and_type = &cp_info[name_and_type_index as usize];
-    if let CpInfo::ConstantNameAndType { tag: _tag, name_index, descriptor_index: _descriptor_index } = constant_name_and_type {
-        get_constant_utf8(name_index.clone(), cp_info)
-    } else {
-        panic!("Expected ConstantNameAndType at idx {}", name_and_type_index)
-    }
-}
-
-fn get_type(name_and_type_index: u16, cp_info: &Vec<CpInfo>) -> String {
-    let constant_name_and_type = &cp_info[name_and_type_index as usize];
-    if let CpInfo::ConstantNameAndType { tag: _tag, name_index: _name_index, descriptor_index } = constant_name_and_type {
-        get_constant_utf8(descriptor_index.clone(), cp_info)
-    } else {
-        panic!("Expected ConstantNameAndType at idx {}", name_and_type_index)
-    }
-}
-
 fn method_info_to_string(method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> String {
     let access_flags: Vec<MethodAccessFlag> = MethodAccessFlag::parse_flags(method_info.access_flags);
     let access_flags: Vec<&str> = access_flags.iter().map(|f| f.to_java_code()).collect();
     let access_flags: String = access_flags.join(" ");
     let method_name = get_constant_utf8(method_info.name_index, cp_info);
     let descriptor = get_constant_utf8(method_info.descriptor_index, cp_info);
-    let attributes = method_info_attributes(method_info);
+    let attributes = method_info_attributes(method_info, cp_info);
     format!("{} {}\n    \
         descriptor: {}\n    \
         flags: ({:#06x}) {}\n\
@@ -158,18 +123,18 @@ fn method_info_to_string(method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> Str
     )
 }
 
-fn method_info_attributes(method_info: &MethodInfo) -> Vec<String> {
+fn method_info_attributes(method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> Vec<String> {
     let mut attributes: Vec<String> = Vec::with_capacity(method_info.attributes_count as usize);
     for attribute in method_info.attributes.iter() {
-        attributes.push(method_info_attribute(attribute));
+        attributes.push(method_info_attribute(attribute, method_info, cp_info));
     }
     attributes
 }
 
-fn method_info_attribute(attribute_info: &AttributeInfo) -> String {
+fn method_info_attribute(attribute_info: &AttributeInfo, method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> String {
     match attribute_info {
         AttributeInfo::ConstantValue { .. } => todo!(),
-        code @ AttributeInfo::Code { .. } => method_attribute_info_code(code),
+        code @ AttributeInfo::Code { .. } => method_attribute_info_code(code, method_info, cp_info),
         AttributeInfo::StackMapTable { .. } => todo!(),
         AttributeInfo::Exceptions { .. } => todo!(),
         AttributeInfo::InnerClasses { .. } => todo!(),
@@ -202,7 +167,7 @@ fn method_info_attribute(attribute_info: &AttributeInfo) -> String {
 }
 
 
-fn method_attribute_info_code(code: &AttributeInfo) -> String {
+fn method_attribute_info_code(code: &AttributeInfo, method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> String {
     if let AttributeInfo::Code {
         attribute_name_index: _attribute_name_index,
         attribute_length: _attribute_length,
@@ -216,12 +181,14 @@ fn method_attribute_info_code(code: &AttributeInfo) -> String {
         attributes: _attributes
     } = code {
         let instructions_block = instructions_block(code);
+        let args_size = method_arguments_count(method_info, cp_info);
         format!(
             "    Code:\n      \
-            stack={}, locals={}, args_size=TODO\n\
+            stack={}, locals={}, args_size={}\n\
             {}",
             max_stack,
             max_locals,
+            args_size,
             instructions_block
         )
     } else {

@@ -8,6 +8,7 @@ mod parser;
 mod pretty_print;
 mod opcodes;
 mod access_flags;
+mod parser_helper;
 
 fn main() {
 

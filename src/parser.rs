@@ -322,5 +322,3 @@ fn get_u4(idx: usize, bytecode: &Vec<u8>) -> (usize, u32) {
     let r: u32 = u0 | u1 | u2 | u3;
     (idx + 4, r)
 }
-
-
