@@ -110,7 +110,7 @@ fn method_info_to_string(method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> Str
     let method_name = get_constant_utf8(method_info.name_index, cp_info);
     let descriptor = get_constant_utf8(method_info.descriptor_index, cp_info);
     let attributes = method_info_attributes(method_info, cp_info);
-    format!("{} {}\n    \
+    format!("{} {}(TODO);\n    \
         descriptor: {}\n    \
         flags: ({:#06x}) {}\n\
         {}",
@@ -166,7 +166,6 @@ fn method_info_attribute(attribute_info: &AttributeInfo, method_info: &MethodInf
     }
 }
 
-
 fn method_attribute_info_code(code: &AttributeInfo, method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> String {
     if let AttributeInfo::Code {
         attribute_name_index: _attribute_name_index,
@@ -202,7 +201,7 @@ fn instructions_block(code: &Vec<u8>) -> String {
     while i < code.len() {
         let opcode = get_opcode(code[i]);
         let (new_i, opcode_args_string) = instruction_args(i, &opcode, code);
-        let line = format!("         {}: {}\t{}", i, opcode.str(), opcode_args_string);
+        let line = format!("{:10}: {:14}{}", i, opcode.str(), opcode_args_string);
         acc.push(line);
         i = new_i;
     }
@@ -232,7 +231,7 @@ fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>) -> (usiz
         Opcode::Ldc => {
             // Push item from run-time constant pool
             let (new_idx, index) = get_u1(opcode_idx + 1, code);
-            (new_idx, format!("#{}", index))
+            (new_idx, format!("#{:<19}// TODO", index))
         },
         Opcode::LdcW => todo!(),
         Opcode::Ldc2W => todo!(),
@@ -402,7 +401,7 @@ fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>) -> (usiz
         Opcode::Getstatic => {
             // get static field from a class
             let (new_idx, fieldref) = get_u2(opcode_idx + 1, code);
-            (new_idx, format!("#{}", fieldref))
+            (new_idx, format!("#{:<19}// TODO", fieldref))
         },
         Opcode::Putstatic => todo!(),
         Opcode::Getfield => todo!(),
@@ -410,12 +409,12 @@ fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>) -> (usiz
         Opcode::Invokevirtual => {
             // Invoke instance method; dispatch based on class
             let (new_idx, index) = get_u2(opcode_idx + 1, code);
-            (new_idx, format!("#{}", index))
+            (new_idx, format!("#{:<19}// TODO", index))
         },
         Opcode::Invokespecial => {
             // Invoke instance method; direct invocation of instance initialization methods and methods of the current class and its supertypes
             let (new_idx, index) = get_u2(opcode_idx + 1, code);
-            (new_idx, format!("#{}", index))
+            (new_idx, format!("#{:<19}// TODO", index))
         },
         Opcode::Invokestatic => todo!(),
         Opcode::Invokeinterface => todo!(),
