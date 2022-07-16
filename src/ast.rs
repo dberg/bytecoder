@@ -106,3 +106,25 @@ pub struct LineNumberTableItem {
     pub start_pc: u16,
     pub line_number: u16
 }
+
+#[derive(Debug)]
+enum FieldType {
+    BaseType { term: FieldTypeTerm },
+    ObjectType { class_name: String },
+    ArrayType { field_type: Box<FieldType> },
+}
+
+#[derive(Debug)]
+enum FieldTypeTerm {
+    B, // byte
+    C, // char
+    D, // double
+    F, // float
+    I, // int
+    J, // long
+    L, // ClassName ;
+    S, // short
+    Z, // boolean
+    A, // [ one dimension array
+
+}
