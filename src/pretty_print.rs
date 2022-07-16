@@ -105,24 +105,27 @@ fn cp_info_index_prefix(idx: usize) -> String {
 
 fn method_info_to_string(method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> String {
     let access_flags: Vec<MethodAccessFlag> = MethodAccessFlag::parse_flags(method_info.access_flags);
-    let access_flags: Vec<&str> = access_flags.iter().map(|f| f.to_java_code()).collect();
-    let access_flags: String = access_flags.join(" ");
+    let access_flags_java: Vec<&str> = access_flags.iter().map(|f| f.to_java_code()).collect();
+    let access_flags_java: String = access_flags_java.join(" ");
+    let access_flags_jvm: Vec<&str> = access_flags.iter().map(|f| f.to_str()).collect();
+    let access_flags_jvm: String = access_flags_jvm.join(", ");
     let method_name = get_constant_utf8(method_info.name_index, cp_info);
     let descriptor = get_constant_utf8(method_info.descriptor_index, cp_info);
     let attributes = method_info_attributes(method_info, cp_info);
     let arguments = parse_method_arguments(method_info, cp_info);
     let arguments = parse_field_types(&arguments);
+    let arguments: Vec<String> = arguments.iter().map(|f| f.str_java()).collect();
 
-    format!("{} {}(TODO: {:?});\n    \
+    format!("{} {}({});\n    \
         descriptor: {}\n    \
         flags: ({:#06x}) {}\n\
         {}",
-        access_flags,
+        access_flags_java,
         method_name,
-        arguments,
+        arguments.join(", "),
         descriptor,
         method_info.access_flags,
-        access_flags,
+        access_flags_jvm,
         attributes.join("\n")
     )
 }

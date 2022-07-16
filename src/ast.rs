@@ -126,5 +126,38 @@ pub enum FieldTypeTerm {
     S, // short
     Z, // boolean
     A, // [ one dimension array
+}
 
+impl FieldType {
+    pub fn str_java(&self) -> String {
+        match self {
+            FieldType::BaseType { term } =>
+                String::from(term.str_java()),
+            FieldType::ObjectType { class_name } => {
+                let class_name: &str = &class_name[..class_name.len() - 1];
+                String::from(class_name)
+            },
+            FieldType::ArrayType { field_type } => {
+                let prefix = field_type.str_java();
+                format!("{}[]", prefix)
+            }
+        }
+    }
+}
+
+impl FieldTypeTerm {
+    pub fn str_java(&self) -> &str {
+        match self {
+            FieldTypeTerm::B => "byte",
+            FieldTypeTerm::C => "char",
+            FieldTypeTerm::D => "double",
+            FieldTypeTerm::F => "float",
+            FieldTypeTerm::I => "int",
+            FieldTypeTerm::J => "long",
+            FieldTypeTerm::L => "",
+            FieldTypeTerm::S => "short",
+            FieldTypeTerm::Z => "boolean",
+            FieldTypeTerm::A => "[]"
+        }
+    }
 }

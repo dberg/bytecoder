@@ -79,13 +79,11 @@ pub fn parse_field_type(field_type: String) -> FieldType {
         'S' => FieldType::BaseType { term: FieldTypeTerm::S },
         'Z' => FieldType::BaseType { term: FieldTypeTerm::Z },
         'L' => {
-            let mut class_name = field_type.clone();
-            class_name.remove(0);
+            let class_name: String = field_type[1..].to_string();
             FieldType::ObjectType { class_name }
         },
         '[' => {
-            let mut field_type_minus_reference = field_type.clone();
-            field_type_minus_reference.remove(0);
+            let field_type_minus_reference = field_type[1..].to_string();
             let remaining_field_type = parse_field_type(field_type_minus_reference);
             FieldType::ArrayType { field_type: Box::new(remaining_field_type) }
         },
