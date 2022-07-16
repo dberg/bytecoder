@@ -143,7 +143,7 @@ fn method_info_attribute(attribute_info: &AttributeInfo, method_info: &MethodInf
         AttributeInfo::Signature { .. } => todo!(),
         AttributeInfo::SourceFile { .. } => todo!(),
         AttributeInfo::SourceDebugExtension { .. } => todo!(),
-        AttributeInfo::LineNumberTable { .. } => todo!(),
+        lnt @ AttributeInfo::LineNumberTable { .. } => line_number_table(lnt),
         AttributeInfo::LocalVariableTable { .. } => todo!(),
         AttributeInfo::LocalVariableTypeTable { .. } => todo!(),
         AttributeInfo::Deprecated { .. } => todo!(),
@@ -176,22 +176,50 @@ fn method_attribute_info_code(code: &AttributeInfo, method_info: &MethodInfo, cp
         code,
         exception_table_length: _exception_table_length,
         exception_table: _exception_table,
-        attributes_count: _attributes_count,
-        attributes: _attributes
+        attributes_count,
+        attributes
     } = code {
         let instructions_block = instructions_block(code);
         let args_size = method_arguments_count(method_info, cp_info);
+        let code_attributes_len = attributes_count.clone() as usize;
+        let mut code_attributes: Vec<String> = Vec::with_capacity(code_attributes_len);
+        for i in 0..code_attributes_len {
+            let attribute_str = method_info_attribute(&attributes[i], method_info, cp_info);
+            code_attributes.push(attribute_str);
+        }
+
         format!(
             "    Code:\n      \
             stack={}, locals={}, args_size={}\n\
-            {}",
+            {}\n{}",
             max_stack,
             max_locals,
             args_size,
-            instructions_block
+            instructions_block,
+            code_attributes.join("\n")
         )
     } else {
         panic!("Expected AttributeInfo::Code")
+    }
+}
+
+fn line_number_table(line_number_table: &AttributeInfo) -> String {
+    if let AttributeInfo::LineNumberTable {
+        attribute_name_index: _attribute_name_index,
+        attribute_length: _attribute_length,
+        line_number_table_length,
+        line_number_tables
+    } = line_number_table {
+
+        let mut items: Vec<String> = Vec::with_capacity(line_number_table_length.clone() as usize);
+        for item in line_number_tables.iter() {
+            let line = format!("        line {}: {}", item.line_number, item.start_pc);
+            items.push(line);
+        }
+
+        format!("      LineNumberTable:\n{}", items.join("\n"))
+    } else {
+        panic!("Expected AttributeInfo::LineNumberTable")
     }
 }
 
