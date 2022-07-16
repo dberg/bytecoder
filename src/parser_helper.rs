@@ -1,5 +1,5 @@
 use crate::access_flags::MethodAccessFlag;
-use crate::ast::{CpInfo, MethodInfo};
+use crate::ast::{CpInfo, FieldType, FieldTypeTerm, MethodInfo};
 
 pub fn get_constant_class_name(class_index: u16, cp_info: &Vec<CpInfo>) -> String {
     let constant_class = &cp_info[class_index as usize];
@@ -58,6 +58,39 @@ pub fn parse_method_arguments(method_info: &MethodInfo, cp_pool: &Vec<CpInfo>) -
     }
 
     args
+}
+
+pub fn parse_field_types(field_types: &Vec<String>) -> Vec<FieldType> {
+    field_types
+        .iter()
+        .map(|f| parse_field_type(f.to_string()))
+        .collect()
+}
+
+pub fn parse_field_type(field_type: String) -> FieldType {
+    let first_char = field_type.chars().next().unwrap();
+    match first_char {
+        'B' => FieldType::BaseType { term: FieldTypeTerm::B },
+        'C' => FieldType::BaseType { term: FieldTypeTerm::C },
+        'D' => FieldType::BaseType { term: FieldTypeTerm::D },
+        'F' => FieldType::BaseType { term: FieldTypeTerm::F },
+        'I' => FieldType::BaseType { term: FieldTypeTerm::I },
+        'J' => FieldType::BaseType { term: FieldTypeTerm::J },
+        'S' => FieldType::BaseType { term: FieldTypeTerm::S },
+        'Z' => FieldType::BaseType { term: FieldTypeTerm::Z },
+        'L' => {
+            let mut class_name = field_type.clone();
+            class_name.remove(0);
+            FieldType::ObjectType { class_name }
+        },
+        '[' => {
+            let mut field_type_minus_reference = field_type.clone();
+            field_type_minus_reference.remove(0);
+            let remaining_field_type = parse_field_type(field_type_minus_reference);
+            FieldType::ArrayType { field_type: Box::new(remaining_field_type) }
+        },
+        _ => panic!("Failed to parse field type {}", field_type)
+    }
 }
 
 pub fn method_arguments_count(method_info: &MethodInfo, cp_pool: &Vec<CpInfo>) -> usize {

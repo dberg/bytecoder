@@ -108,14 +108,14 @@ pub struct LineNumberTableItem {
 }
 
 #[derive(Debug)]
-enum FieldType {
+pub enum FieldType {
     BaseType { term: FieldTypeTerm },
     ObjectType { class_name: String },
     ArrayType { field_type: Box<FieldType> },
 }
 
 #[derive(Debug)]
-enum FieldTypeTerm {
+pub enum FieldTypeTerm {
     B, // byte
     C, // char
     D, // double

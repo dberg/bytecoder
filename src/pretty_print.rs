@@ -4,7 +4,7 @@ use crate::access_flags::{ClassAccessFlag, MethodAccessFlag};
 use crate::ast::{AttributeInfo, ClassFile, CpInfo, MethodInfo};
 use crate::opcodes::{get_opcode, Opcode};
 use crate::parser::{get_u1, get_u2};
-use crate::parser_helper::{get_constant_class_name, get_constant_utf8, get_name, get_type, method_arguments_count};
+use crate::parser_helper::{get_constant_class_name, get_constant_utf8, get_name, get_type, method_arguments_count, parse_field_types, parse_method_arguments};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     println!("TODO: public class A");
@@ -110,12 +110,16 @@ fn method_info_to_string(method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> Str
     let method_name = get_constant_utf8(method_info.name_index, cp_info);
     let descriptor = get_constant_utf8(method_info.descriptor_index, cp_info);
     let attributes = method_info_attributes(method_info, cp_info);
-    format!("{} {}(TODO);\n    \
+    let arguments = parse_method_arguments(method_info, cp_info);
+    let arguments = parse_field_types(&arguments);
+
+    format!("{} {}(TODO: {:?});\n    \
         descriptor: {}\n    \
         flags: ({:#06x}) {}\n\
         {}",
         access_flags,
         method_name,
+        arguments,
         descriptor,
         method_info.access_flags,
         access_flags,
