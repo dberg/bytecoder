@@ -7,13 +7,14 @@ use crate::parser::{get_u1, get_u2};
 use crate::parser_helper::{get_constant_class_name, get_constant_utf8, get_name, get_type, method_arguments_count, parse_field_types, parse_method_arguments};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
-    println!("TODO: public class A");
+    let this_class_name = get_constant_class_name(class_file.this_class, &class_file.cp_info);
     let this_class = format!("this_class: #{}", class_file.this_class);
     let super_class = format!("super_class: #{}", class_file.super_class);
     let class_access_flags: Vec<ClassAccessFlag> = ClassAccessFlag::parse_flags(class_file.access_flags);
     let class_access_flags: Vec<&str> = class_access_flags.iter().map(|f| f.to_str()).collect();
     let class_access_flags: String = class_access_flags.join(", ");
-    println!("  \
+    println!("TODO Classfile...");
+    println!("TODO(modifers) class {}\n\
       minor version: {:x}\n  \
       major version: {}\n  \
       flags: ({:#06x}) {}\n  \
@@ -21,6 +22,7 @@ pub fn pretty_print_text(class_file: &ClassFile) {
       {:<40}// {}\n  \
       interfaces: {}, fields: {}, methods: {}, attributes: {}\
       ",
+        this_class_name,
         class_file.minor_version,
         class_file.major_version,
         class_file.access_flags,

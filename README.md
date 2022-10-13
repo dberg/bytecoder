@@ -1,6 +1,6 @@
 # Bytecoder
 
-JVM 18 bytecode reader.
+JVM 19 bytecode reader.
 
 ![under construction](docs/under_construction.gif)
 
@@ -9,3 +9,7 @@ JVM 18 bytecode reader.
 ```bash
 cargo run
 ```
+
+## References
+
+[JVM 19](https://docs.oracle.com/javase/specs/jvms/se19/html/index.html)
