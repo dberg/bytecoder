@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(PartialOrd, Ord, PartialEq, Eq)]
+#[derive(PartialOrd, Ord, PartialEq, Eq, Clone)]
 pub enum ClassAccessFlag {
     AccPublic,
     AccFinal,
