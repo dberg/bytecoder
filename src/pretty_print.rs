@@ -5,7 +5,7 @@ use crate::access_flags::ClassAccessFlag::AccSuper;
 use crate::ast::{AttributeInfo, ClassFile, CpInfo, MethodInfo};
 use crate::opcodes::{get_opcode, Opcode};
 use crate::parser::{get_u1, get_u2};
-use crate::parser_helper::{get_constant_class_name, get_constant_utf8, get_name, get_type, method_arguments_count, parse_field_types, parse_method_arguments};
+use crate::parser_helper::{get_constant_class_name, get_constant_utf8, get_name, get_name_quoted, get_type, method_arguments_count, parse_field_types, parse_method_arguments};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     let this_class_name = get_constant_class_name(class_file.this_class, &class_file.cp_info);
@@ -43,7 +43,7 @@ pub fn pretty_print_text(class_file: &ClassFile) {
         class_file.attributes_count,
     );
 
-    println!("Constant pool({}):", class_file.constant_pool_count - 1);
+    println!("Constant pool:");
     for (idx, _item) in class_file.cp_info.iter().enumerate() {
         if idx != 0 {
             let line = cp_info_to_string(idx, &class_file.cp_info);
@@ -60,7 +60,7 @@ pub fn pretty_print_text(class_file: &ClassFile) {
 
     println!("{{");
     for method_info in class_file.methods.iter() {
-        let method_str = method_info_to_string(method_info, &class_file.cp_info);
+        let method_str = method_info_to_string(method_info, &class_file);
         println!("  {}", method_str);
     }
     println!("}}");
@@ -83,7 +83,7 @@ fn cp_info_to_string(idx: usize, cp_info: &Vec<CpInfo>) -> String {
         CpInfo::ConstantMethodref { tag: _tag, class_index, name_and_type_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
             let class_name = get_constant_class_name(class_index.clone(), cp_info);
-            let method_name = get_name(name_and_type_index.clone(), cp_info);
+            let method_name = get_name_quoted(get_name(name_and_type_index.clone(), cp_info));
             let method_type = get_type(name_and_type_index.clone(), cp_info);
             let method_indexes = format!("#{}.#{}", class_index, name_and_type_index);
             format!("{} = {:19}{:15}// {}.{}:{}", idx_prefix, "Methodref", method_indexes, class_name, method_name, method_type)
@@ -94,7 +94,7 @@ fn cp_info_to_string(idx: usize, cp_info: &Vec<CpInfo>) -> String {
         },
         CpInfo::ConstantNameAndType { tag: _tag, name_index, descriptor_index } => {
             let idx_prefix = cp_info_index_prefix(idx);
-            let name = get_constant_utf8(name_index.clone(), cp_info);
+            let name = get_name_quoted(get_constant_utf8(name_index.clone(), cp_info));
             let typename = get_constant_utf8(descriptor_index.clone(), cp_info);
             let name_and_type_indexes = format!("#{}:#{}", name_index, descriptor_index);
             format!("{} = {:19}{:15}// {}:{}", idx_prefix, "NameAndType", name_and_type_indexes, name, typename)
@@ -111,16 +111,17 @@ fn cp_info_index_prefix(idx: usize) -> String {
     format!("{0:<1$}#{2}", " ", left_pad, idx)
 }
 
-fn method_info_to_string(method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> String {
+fn method_info_to_string(method_info: &MethodInfo, class_file: &ClassFile) -> String {
     let access_flags: Vec<MethodAccessFlag> = MethodAccessFlag::parse_flags(method_info.access_flags);
     let access_flags_java: Vec<&str> = access_flags.iter().map(|f| f.to_java_code()).collect();
     let access_flags_java: String = access_flags_java.join(" ");
     let access_flags_jvm: Vec<&str> = access_flags.iter().map(|f| f.to_str()).collect();
     let access_flags_jvm: String = access_flags_jvm.join(", ");
-    let method_name = get_constant_utf8(method_info.name_index, cp_info);
-    let descriptor = get_constant_utf8(method_info.descriptor_index, cp_info);
-    let attributes = method_info_attributes(method_info, cp_info);
-    let arguments = parse_method_arguments(method_info, cp_info);
+    let method_name = get_constant_utf8(method_info.name_index, &class_file.cp_info);
+    let method_name: String = if method_name == "<init>" { get_constant_class_name(class_file.this_class, &class_file.cp_info) } else { method_name };
+    let descriptor = get_constant_utf8(method_info.descriptor_index, &class_file.cp_info);
+    let attributes = method_info_attributes(method_info, &class_file.cp_info);
+    let arguments = parse_method_arguments(method_info, &class_file.cp_info);
     let arguments = parse_field_types(&arguments);
     let arguments: Vec<String> = arguments.iter().map(|f| f.str_java()).collect();
 

@@ -28,6 +28,10 @@ pub fn get_name(name_and_type_index: u16, cp_info: &Vec<CpInfo>) -> String {
     }
 }
 
+pub fn get_name_quoted(str: String) -> String {
+    if str == "<init>" { format!("\"{}\"", str) } else { str }
+}
+
 pub fn get_type(name_and_type_index: u16, cp_info: &Vec<CpInfo>) -> String {
     let constant_name_and_type = &cp_info[name_and_type_index as usize];
     if let CpInfo::ConstantNameAndType { tag: _tag, name_index: _name_index, descriptor_index } = constant_name_and_type {
