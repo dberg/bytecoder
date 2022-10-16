@@ -9,6 +9,7 @@ mod pretty_print;
 mod opcodes;
 mod access_flags;
 mod parser_helper;
+mod pretty_print_helper;
 
 fn main() {
 

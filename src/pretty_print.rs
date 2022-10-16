@@ -6,6 +6,7 @@ use crate::ast::{AttributeInfo, ClassFile, CpInfo, MethodInfo};
 use crate::opcodes::{get_opcode, Opcode};
 use crate::parser::{get_u1, get_u2};
 use crate::parser_helper::{get_constant_class_name, get_constant_utf8, get_name, get_name_quoted, get_type, method_arguments_count, parse_field_types, parse_method_arguments};
+use crate::pretty_print_helper::get_constant_method_ref_description;
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     let this_class_name = get_constant_class_name(class_file.this_class, &class_file.cp_info);
@@ -120,7 +121,7 @@ fn method_info_to_string(method_info: &MethodInfo, class_file: &ClassFile) -> St
     let method_name = get_constant_utf8(method_info.name_index, &class_file.cp_info);
     let method_name: String = if method_name == "<init>" { get_constant_class_name(class_file.this_class, &class_file.cp_info) } else { method_name };
     let descriptor = get_constant_utf8(method_info.descriptor_index, &class_file.cp_info);
-    let attributes = method_info_attributes(method_info, &class_file.cp_info);
+    let attributes = method_info_attributes(method_info, class_file);
     let arguments = parse_method_arguments(method_info, &class_file.cp_info);
     let arguments = parse_field_types(&arguments);
     let arguments: Vec<String> = arguments.iter().map(|f| f.str_java()).collect();
@@ -139,18 +140,18 @@ fn method_info_to_string(method_info: &MethodInfo, class_file: &ClassFile) -> St
     )
 }
 
-fn method_info_attributes(method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> Vec<String> {
+fn method_info_attributes(method_info: &MethodInfo, class_file: &ClassFile) -> Vec<String> {
     let mut attributes: Vec<String> = Vec::with_capacity(method_info.attributes_count as usize);
     for attribute in method_info.attributes.iter() {
-        attributes.push(method_info_attribute(attribute, method_info, cp_info));
+        attributes.push(method_info_attribute(attribute, method_info, class_file));
     }
     attributes
 }
 
-fn method_info_attribute(attribute_info: &AttributeInfo, method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> String {
+fn method_info_attribute(attribute_info: &AttributeInfo, method_info: &MethodInfo, class_file: &ClassFile) -> String {
     match attribute_info {
         AttributeInfo::ConstantValue { .. } => todo!(),
-        code @ AttributeInfo::Code { .. } => method_attribute_info_code(code, method_info, cp_info),
+        code @ AttributeInfo::Code { .. } => method_attribute_info_code(code, method_info, class_file),
         AttributeInfo::StackMapTable { .. } => todo!(),
         AttributeInfo::Exceptions { .. } => todo!(),
         AttributeInfo::InnerClasses { .. } => todo!(),
@@ -182,7 +183,7 @@ fn method_info_attribute(attribute_info: &AttributeInfo, method_info: &MethodInf
     }
 }
 
-fn method_attribute_info_code(code: &AttributeInfo, method_info: &MethodInfo, cp_info: &Vec<CpInfo>) -> String {
+fn method_attribute_info_code(code: &AttributeInfo, method_info: &MethodInfo, class_file: &ClassFile) -> String {
     if let AttributeInfo::Code {
         attribute_name_index: _attribute_name_index,
         attribute_length: _attribute_length,
@@ -195,12 +196,12 @@ fn method_attribute_info_code(code: &AttributeInfo, method_info: &MethodInfo, cp
         attributes_count,
         attributes
     } = code {
-        let instructions_block = instructions_block(code);
-        let args_size = method_arguments_count(method_info, cp_info);
+        let instructions_block = instructions_block(code, class_file);
+        let args_size = method_arguments_count(method_info, &class_file.cp_info);
         let code_attributes_len = attributes_count.clone() as usize;
         let mut code_attributes: Vec<String> = Vec::with_capacity(code_attributes_len);
         for i in 0..code_attributes_len {
-            let attribute_str = method_info_attribute(&attributes[i], method_info, cp_info);
+            let attribute_str = method_info_attribute(&attributes[i], method_info, class_file);
             code_attributes.push(attribute_str);
         }
 
@@ -239,22 +240,25 @@ fn line_number_table(line_number_table: &AttributeInfo) -> String {
     }
 }
 
-fn instructions_block(code: &Vec<u8>) -> String {
+fn instructions_block(code: &Vec<u8>, class_file: &ClassFile) -> String {
     let mut acc: Vec<String> = Vec::new();
     let mut i: usize = 0;
     while i < code.len() {
         let opcode = get_opcode(code[i]);
-        let (new_i, opcode_args_string) = instruction_args(i, &opcode, code);
-        let line = format!("{:10}: {:14}{}", i, opcode.str(), opcode_args_string);
+        let (new_i, opcode_args_string_opt) = instruction_args(i, &opcode, code, class_file);
+        let line = match opcode_args_string_opt {
+            None => format!("{:10}: {}", i, opcode.str()),
+            Some(opcode_args_string) => format!("{:10}: {:14}{}", i, opcode.str(), opcode_args_string)
+        };
         acc.push(line);
         i = new_i;
     }
     acc.join("\n")
 }
 
-fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>) -> (usize, String) {
+fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>, class_file: &ClassFile) -> (usize, Option<String>) {
     match opcode {
-        Opcode::Nop => (opcode_idx + 1, String::from("")),
+        Opcode::Nop => (opcode_idx + 1, None),
         Opcode::AconstNull => todo!("opcode_idx[{}]", opcode_idx),
         Opcode::IconstM1 => todo!(),
         Opcode::Iconst0 => todo!(),
@@ -275,7 +279,7 @@ fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>) -> (usiz
         Opcode::Ldc => {
             // Push item from run-time constant pool
             let (new_idx, index) = get_u1(opcode_idx + 1, code);
-            (new_idx, format!("#{:<19}// TODO", index))
+            (new_idx, Some(format!("#{:<19}// TODO", index)))
         },
         Opcode::LdcW => todo!(),
         Opcode::Ldc2W => todo!(),
@@ -302,7 +306,7 @@ fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>) -> (usiz
         Opcode::Dload3 => todo!(),
         Opcode::Aload0 => {
             // Load reference from local variable
-            (opcode_idx + 1, String::from(""))
+            (opcode_idx + 1, None)
         },
         Opcode::Aload1 => todo!(),
         Opcode::Aload2 => todo!(),
@@ -440,12 +444,12 @@ fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>) -> (usiz
         Opcode::Areturn => todo!(),
         Opcode::Return => {
             // Return void from method
-            (opcode_idx + 1, String::from(""))
+            (opcode_idx + 1, None)
         },
         Opcode::Getstatic => {
             // get static field from a class
             let (new_idx, fieldref) = get_u2(opcode_idx + 1, code);
-            (new_idx, format!("#{:<19}// TODO", fieldref))
+            (new_idx, Some(format!("#{:<19}// TODO", fieldref)))
         },
         Opcode::Putstatic => todo!(),
         Opcode::Getfield => todo!(),
@@ -453,12 +457,14 @@ fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>) -> (usiz
         Opcode::Invokevirtual => {
             // Invoke instance method; dispatch based on class
             let (new_idx, index) = get_u2(opcode_idx + 1, code);
-            (new_idx, format!("#{:<19}// TODO", index))
+            let method = get_constant_method_ref_description(index as usize, class_file);
+            (new_idx, Some(format!("#{:<19}// Method {}", index, method)))
         },
         Opcode::Invokespecial => {
             // Invoke instance method; direct invocation of instance initialization methods and methods of the current class and its supertypes
             let (new_idx, index) = get_u2(opcode_idx + 1, code);
-            (new_idx, format!("#{:<19}// TODO", index))
+            let method = get_constant_method_ref_description(index as usize, class_file);
+            (new_idx, Some(format!("#{:<19}// Method {}", index, method)))
         },
         Opcode::Invokestatic => todo!(),
         Opcode::Invokeinterface => todo!(),
