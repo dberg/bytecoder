@@ -17,3 +17,18 @@ pub fn get_constant_method_ref_description(cp_index: usize, class_file: &ClassFi
         _ => panic!("Unexpected type at cp_index {}", cp_index)
     }
 }
+
+/// Get the description for the `ldc` opcode.
+/// Ex.: String Hello, World
+pub fn get_ldc_description(cp_index: usize, class_file: &ClassFile) -> String {
+    match &class_file.cp_info[cp_index] {
+        CpInfo::ConstantString { tag: _tag, string_index} => {
+            let str = get_ldc_description(string_index.clone() as usize, class_file);
+            format!("String {}", str)
+        },
+        CpInfo::ConstantUtf8 { tag: _tag, length: _length, bytes: _bytes, bytes_str} => {
+            bytes_str.clone()
+        },
+        _ => panic!("TODO: get_ldc_description cp_index {}", cp_index)
+    }
+}

@@ -6,7 +6,7 @@ use crate::ast::{AttributeInfo, ClassFile, CpInfo, MethodInfo};
 use crate::opcodes::{get_opcode, Opcode};
 use crate::parser::{get_u1, get_u2};
 use crate::parser_helper::{get_constant_class_name, get_constant_utf8, get_name, get_name_quoted, get_type, method_arguments_count, parse_field_types, parse_method_arguments};
-use crate::pretty_print_helper::get_constant_method_ref_description;
+use crate::pretty_print_helper::{get_constant_method_ref_description, get_ldc_description};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     let this_class_name = get_constant_class_name(class_file.this_class, &class_file.cp_info);
@@ -53,16 +53,23 @@ pub fn pretty_print_text(class_file: &ClassFile) {
     }
 
     // TMP debugging
+    /*
     println!();
     for method_info in class_file.methods.iter() {
-        println!("{:?}", method_info);
+        //println!("{:?}", method_info);
     }
     println!();
+    */
 
     println!("{{");
-    for method_info in class_file.methods.iter() {
+    let mut it = class_file.methods.iter().peekable();
+    while let Some(method_info) = it.next() {
         let method_str = method_info_to_string(method_info, &class_file);
-        println!("  {}", method_str);
+        if it.peek().is_none() {
+            println!("  {}", method_str);
+        } else {
+            println!("  {}\n", method_str);
+        }
     }
     println!("}}");
 }
@@ -279,7 +286,8 @@ fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>, class_fi
         Opcode::Ldc => {
             // Push item from run-time constant pool
             let (new_idx, index) = get_u1(opcode_idx + 1, code);
-            (new_idx, Some(format!("#{:<19}// TODO", index)))
+            let description = get_ldc_description(index as usize, class_file);
+            (new_idx, Some(format!("#{:<19}// {}", index, description)))
         },
         Opcode::LdcW => todo!(),
         Opcode::Ldc2W => todo!(),
