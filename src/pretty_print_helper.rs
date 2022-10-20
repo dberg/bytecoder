@@ -18,6 +18,18 @@ pub fn get_constant_method_ref_description(cp_index: usize, class_file: &ClassFi
     }
 }
 
+pub fn get_constant_field_ref_description(cp_index: usize, class_file: &ClassFile) -> String {
+    match &class_file.cp_info[cp_index] {
+        CpInfo::ConstantFieldref { tag: _tag, class_index, name_and_type_index } => {
+            let class_name = get_constant_class_name(class_index.clone(), &class_file.cp_info);
+            let field_name = get_name(name_and_type_index.clone(), &class_file.cp_info);
+            let field_type = get_type(name_and_type_index.clone(), &class_file.cp_info);
+            format!("{}.{}:{}", class_name, field_name, field_type)
+        },
+        _ => panic!("Unexpected type at cp_index {}", cp_index)
+    }
+}
+
 /// Get the description for the `ldc` opcode.
 /// Ex.: String Hello, World
 pub fn get_ldc_description(cp_index: usize, class_file: &ClassFile) -> String {
@@ -30,5 +42,17 @@ pub fn get_ldc_description(cp_index: usize, class_file: &ClassFile) -> String {
             bytes_str.clone()
         },
         _ => panic!("TODO: get_ldc_description cp_index {}", cp_index)
+    }
+}
+
+/// Get the description for the `getstatic` opcode.
+/// Ex.: Field java/lang/System.out:Ljava/io/PrintStream;
+pub fn get_static_description(cp_index: usize, class_file: &ClassFile) -> String {
+    match &class_file.cp_info[cp_index] {
+        CpInfo::ConstantFieldref { tag: _tag, class_index: _class_index, name_and_type_index: _name_and_type_index } => {
+            let str = get_constant_field_ref_description(cp_index, class_file);
+            format!("Field {}", str)
+        },
+        cp_info => panic!("Unexpected type at cp_index {} {:?}", cp_index, cp_info)
     }
 }

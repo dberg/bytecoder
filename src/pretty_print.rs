@@ -6,7 +6,7 @@ use crate::ast::{AttributeInfo, ClassFile, CpInfo, MethodInfo};
 use crate::opcodes::{get_opcode, Opcode};
 use crate::parser::{get_u1, get_u2};
 use crate::parser_helper::{get_constant_class_name, get_constant_utf8, get_name, get_name_quoted, get_type, method_arguments_count, parse_field_types, parse_method_arguments};
-use crate::pretty_print_helper::{get_constant_method_ref_description, get_ldc_description};
+use crate::pretty_print_helper::{get_constant_method_ref_description, get_ldc_description, get_static_description};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
     let this_class_name = get_constant_class_name(class_file.this_class, &class_file.cp_info);
@@ -52,16 +52,15 @@ pub fn pretty_print_text(class_file: &ClassFile) {
         }
     }
 
-    // TMP debugging
     /*
+    // TMP debugging
     println!();
     for method_info in class_file.methods.iter() {
-        //println!("{:?}", method_info);
+        println!("{:?}", method_info);
     }
     println!();
     */
 
-    println!("{{");
     let mut it = class_file.methods.iter().peekable();
     while let Some(method_info) = it.next() {
         let method_str = method_info_to_string(method_info, &class_file);
@@ -127,6 +126,7 @@ fn method_info_to_string(method_info: &MethodInfo, class_file: &ClassFile) -> St
     let access_flags_jvm: String = access_flags_jvm.join(", ");
     let method_name = get_constant_utf8(method_info.name_index, &class_file.cp_info);
     let method_name: String = if method_name == "<init>" { get_constant_class_name(class_file.this_class, &class_file.cp_info) } else { method_name };
+    // TODO: get the return type from the descriptor as well
     let descriptor = get_constant_utf8(method_info.descriptor_index, &class_file.cp_info);
     let attributes = method_info_attributes(method_info, class_file);
     let arguments = parse_method_arguments(method_info, &class_file.cp_info);
@@ -457,7 +457,8 @@ fn instruction_args(opcode_idx: usize, opcode: &Opcode, code: &Vec<u8>, class_fi
         Opcode::Getstatic => {
             // get static field from a class
             let (new_idx, fieldref) = get_u2(opcode_idx + 1, code);
-            (new_idx, Some(format!("#{:<19}// TODO", fieldref)))
+            let description = get_static_description(fieldref as usize, class_file);
+            (new_idx, Some(format!("#{:<19}// {}", fieldref, description)))
         },
         Opcode::Putstatic => todo!(),
         Opcode::Getfield => todo!(),
