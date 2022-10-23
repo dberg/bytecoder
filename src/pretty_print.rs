@@ -125,19 +125,23 @@ fn method_info_to_string(method_info: &MethodInfo, class_file: &ClassFile) -> St
     let access_flags_jvm: Vec<&str> = access_flags.iter().map(|f| f.to_str()).collect();
     let access_flags_jvm: String = access_flags_jvm.join(", ");
     let method_name = get_constant_utf8(method_info.name_index, &class_file.cp_info);
+    let method_return_type: String = if method_name == "<init>" { String::from(" ") } else {
+        let return_type = method_info_return_type(method_info.descriptor_index, class_file);
+        format!(" {} ", return_type)
+    };
     let method_name: String = if method_name == "<init>" { get_constant_class_name(class_file.this_class, &class_file.cp_info) } else { method_name };
-    // TODO: get the return type from the descriptor as well
-    let descriptor = get_constant_utf8(method_info.descriptor_index, &class_file.cp_info);
     let attributes = method_info_attributes(method_info, class_file);
     let arguments = parse_method_arguments(method_info, &class_file.cp_info);
     let arguments = parse_field_types(&arguments);
     let arguments: Vec<String> = arguments.iter().map(|f| f.str_java()).collect();
+    let descriptor = get_constant_utf8(method_info.descriptor_index, &class_file.cp_info);
 
-    format!("{} {}({});\n    \
+    format!("{}{}{}({});\n    \
         descriptor: {}\n    \
         flags: ({:#06x}) {}\n\
         {}",
         access_flags_java,
+        method_return_type,
         method_name,
         arguments.join(", "),
         descriptor,
@@ -145,6 +149,15 @@ fn method_info_to_string(method_info: &MethodInfo, class_file: &ClassFile) -> St
         access_flags_jvm,
         attributes.join("\n")
     )
+}
+
+fn method_info_return_type(descriptor_index: u16, class_file: &ClassFile) -> String {
+    // ex.: ([Ljava/lang/String;)V
+    // ex.: ()V
+    // TODO: remove prefix and parse return type
+    // let descriptor = get_constant_utf8(descriptor_index, &class_file.cp_info);
+    // let pos = descriptor.find(')');
+    String::from("TODO")
 }
 
 fn method_info_attributes(method_info: &MethodInfo, class_file: &ClassFile) -> Vec<String> {
