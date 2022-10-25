@@ -115,6 +115,8 @@ pub fn method_info_return_type(descriptor_index: u16, class_file: &ClassFile) ->
     }
 }
 
+/// Reference:
+/// https://docs.oracle.com/javase/specs/jvms/se19/html/jvms-4.html#jvms-4.3.3
 pub fn return_descriptor_to_java_code(return_type: String) -> String {
     if return_type == "V" {
         String::from("void")

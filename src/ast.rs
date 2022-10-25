@@ -135,7 +135,8 @@ impl FieldType {
                 String::from(term.str_java()),
             FieldType::ObjectType { class_name } => {
                 let class_name: &str = &class_name[..class_name.len() - 1];
-                String::from(class_name)
+                let class_name: String = String::from(class_name);
+                class_name.replace("/", ".")
             },
             FieldType::ArrayType { field_type } => {
                 let prefix = field_type.str_java();
