@@ -5,7 +5,7 @@ use crate::access_flags::ClassAccessFlag::AccSuper;
 use crate::ast::{AttributeInfo, ClassFile, CpInfo, MethodInfo};
 use crate::opcodes::{get_opcode, Opcode};
 use crate::parser::{get_u1, get_u2};
-use crate::parser_helper::{get_constant_class_name, get_constant_utf8, get_name, get_name_quoted, get_type, method_arguments_count, parse_field_types, parse_method_arguments};
+use crate::parser_helper::{get_constant_class_name, get_constant_utf8, get_name, get_name_quoted, get_type, method_arguments_count, method_info_return_type, parse_field_types, parse_method_arguments, return_descriptor_to_java_code};
 use crate::pretty_print_helper::{get_constant_method_ref_description, get_ldc_description, get_static_description};
 
 pub fn pretty_print_text(class_file: &ClassFile) {
@@ -61,6 +61,7 @@ pub fn pretty_print_text(class_file: &ClassFile) {
     println!();
     */
 
+    println!("{{");
     let mut it = class_file.methods.iter().peekable();
     while let Some(method_info) = it.next() {
         let method_str = method_info_to_string(method_info, &class_file);
@@ -126,7 +127,7 @@ fn method_info_to_string(method_info: &MethodInfo, class_file: &ClassFile) -> St
     let access_flags_jvm: String = access_flags_jvm.join(", ");
     let method_name = get_constant_utf8(method_info.name_index, &class_file.cp_info);
     let method_return_type: String = if method_name == "<init>" { String::from(" ") } else {
-        let return_type = method_info_return_type(method_info.descriptor_index, class_file);
+        let return_type = return_descriptor_to_java_code(method_info_return_type(method_info.descriptor_index, class_file));
         format!(" {} ", return_type)
     };
     let method_name: String = if method_name == "<init>" { get_constant_class_name(class_file.this_class, &class_file.cp_info) } else { method_name };
@@ -149,15 +150,6 @@ fn method_info_to_string(method_info: &MethodInfo, class_file: &ClassFile) -> St
         access_flags_jvm,
         attributes.join("\n")
     )
-}
-
-fn method_info_return_type(descriptor_index: u16, class_file: &ClassFile) -> String {
-    // ex.: ([Ljava/lang/String;)V
-    // ex.: ()V
-    // TODO: remove prefix and parse return type
-    // let descriptor = get_constant_utf8(descriptor_index, &class_file.cp_info);
-    // let pos = descriptor.find(')');
-    String::from("TODO")
 }
 
 fn method_info_attributes(method_info: &MethodInfo, class_file: &ClassFile) -> Vec<String> {

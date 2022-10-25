@@ -1,5 +1,5 @@
 use crate::access_flags::MethodAccessFlag;
-use crate::ast::{CpInfo, FieldType, FieldTypeTerm, MethodInfo};
+use crate::ast::{ClassFile, CpInfo, FieldType, FieldTypeTerm, MethodInfo};
 
 pub fn get_constant_class_name(class_index: u16, cp_info: &Vec<CpInfo>) -> String {
     let constant_class = &cp_info[class_index as usize];
@@ -100,4 +100,25 @@ pub fn method_arguments_count(method_info: &MethodInfo, cp_pool: &Vec<CpInfo>) -
     let flags = MethodAccessFlag::parse_flags(method_info.access_flags);
     let static_flag = flags.contains(&MethodAccessFlag::AccStatic);
     if static_flag { args_len } else { args_len + 1 }
+}
+
+pub fn method_info_return_type(descriptor_index: u16, class_file: &ClassFile) -> String {
+    // ex.: ([Ljava/lang/String;)V
+    // ex.: ()V
+    let descriptor = get_constant_utf8(descriptor_index, &class_file.cp_info);
+    let pos = descriptor.find(')');
+    match pos {
+        None => panic!("Failed to extract return type in descriptor {}", descriptor),
+        Some(idx) => {
+            descriptor.chars().skip(idx + 1).collect()
+        }
+    }
+}
+
+pub fn return_descriptor_to_java_code(return_type: String) -> String {
+    if return_type == "V" {
+        String::from("void")
+    } else {
+        todo!("TODO: return_type {} to java code", return_type)
+    }
 }
