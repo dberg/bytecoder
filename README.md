@@ -7,7 +7,7 @@ JVM 19 bytecode reader.
 ## Build and run
 
 ```bash
-cargo run
+cargo run -- ./tmp/A.class
 ```
 
 ## References
