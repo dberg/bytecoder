@@ -1,5 +1,5 @@
-use crate::access_flags::MethodAccessFlag;
-use crate::ast::{ClassFile, CpInfo, FieldType, FieldTypeTerm, MethodInfo};
+use crate::parser::access_flags::MethodAccessFlag;
+use crate::parser::ast::{ClassFile, CpInfo, FieldType, FieldTypeTerm, MethodInfo};
 
 pub fn get_constant_class_name(class_index: u16, cp_info: &Vec<CpInfo>) -> String {
     let constant_class = &cp_info[class_index as usize];

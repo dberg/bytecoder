@@ -1,5 +1,5 @@
-use crate::ast::{ClassFile, CpInfo};
-use crate::parser_helper::{get_constant_class_name, get_name, get_name_quoted, get_type};
+use crate::parser::ast::{ClassFile, CpInfo};
+use crate::parser::parser_helper::{get_constant_class_name, get_name, get_name_quoted, get_type};
 
 /// Read a MethodRef from the constant pool and return a string representing
 /// the qualified name of the method along with the arguments. Examples of

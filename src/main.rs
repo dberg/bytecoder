@@ -4,12 +4,8 @@ use std::{env, fs};
 use crate::parser::parse_class_file;
 use crate::pretty_print::pretty_print_text;
 
-mod ast;
 mod parser;
 mod pretty_print;
-mod opcodes;
-mod access_flags;
-mod parser_helper;
 mod pretty_print_helper;
 
 fn main() {

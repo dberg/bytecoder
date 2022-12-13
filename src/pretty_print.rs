@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 
-use crate::access_flags::{ClassAccessFlag, MethodAccessFlag};
-use crate::access_flags::ClassAccessFlag::AccSuper;
-use crate::ast::{AttributeInfo, ClassFile, CpInfo, MethodInfo};
-use crate::opcodes::{get_opcode, Opcode};
 use crate::parser::{get_u1, get_u2};
-use crate::parser_helper::{get_constant_class_name, get_constant_utf8, get_name, get_name_quoted, get_type, method_arguments_count, method_info_return_type, parse_field_types, parse_method_arguments, return_descriptor_to_java_code};
+use crate::parser::access_flags::{ClassAccessFlag, MethodAccessFlag};
+use crate::parser::access_flags::ClassAccessFlag::AccSuper;
+use crate::parser::ast::{AttributeInfo, ClassFile, CpInfo, MethodInfo};
+use crate::parser::opcodes::{get_opcode, Opcode};
+use crate::parser::parser_helper::{get_constant_class_name, get_constant_utf8, get_name, get_name_quoted, get_type, method_arguments_count, method_info_return_type, parse_field_types, parse_method_arguments, return_descriptor_to_java_code};
 use crate::pretty_print_helper::{get_constant_method_ref_description, get_ldc_description, get_static_description};
 
 pub fn pretty_print_text(class_file: &ClassFile) {

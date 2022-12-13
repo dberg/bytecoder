@@ -1,7 +1,10 @@
-#![allow(dead_code)]
+use crate::parser::ast::{AttributeInfo, ClassFile, CpInfo, ExceptionTable, FieldInfo, LineNumberTableItem, MethodInfo};
+use crate::parser::ast::AttributeInfo::{LineNumberTable, SourceFile};
 
-use crate::ast::{AttributeInfo, ClassFile, CpInfo, ExceptionTable, FieldInfo, LineNumberTableItem, MethodInfo};
-use crate::ast::AttributeInfo::{LineNumberTable, SourceFile};
+pub mod access_flags;
+pub mod ast;
+pub mod opcodes;
+pub mod parser_helper;
 
 pub fn parse_class_file(bytecode: &Vec<u8>) -> ClassFile {
     let idx: usize = 0;
